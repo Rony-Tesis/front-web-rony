@@ -1,42 +1,42 @@
-# Monitor de clasificación de residuos
+# Monitor de clasificación · Angular y JetMax
 
-Frontend Angular único para el backend MIRA / JetMax. Panel principal, Monitoreo y Clasificaciones, con dominio, aplicación, infraestructura y presentación. Cada componente mantiene su HTML, CSS y TypeScript separados.
+Única interfaz para MIRA y JetMax: Panel principal, Monitoreo y Clasificaciones. Arquitectura por dominio, aplicación, infraestructura y presentación; cada componente tiene HTML, CSS y TypeScript separados.
 
-## Ejecutar con la cámara real
+## Ejecutar con movimiento físico
 
 Primera terminal PowerShell:
 
 ```powershell
 cd C:\Users\PC\Desktop\Tesis\Backend-Rony-Pruebas
-.\run-live.ps1
+.\run-physical.ps1
 ```
 
 Segunda terminal:
 
 ```powershell
 cd C:\Users\PC\Desktop\Tesis\Web-Angular
-npm install
 npm start
 ```
 
-Abre **http://127.0.0.1:4200/monitoring**. `npm start` usa la API del puerto 8000. Debe aparecer “Cámara real · brazo virtual”; la vista grande usa MJPEG y el panel JPEG. Los controles del ciclo virtual están en Monitoreo. Para habilitar “Simular un ciclo”, MIRA debe seleccionar plástico con confianza ≥0.80 y 50 frames estables. Pausar no interrumpe la cámara.
+Abre http://127.0.0.1:4200/monitoring. Debe indicar **Cámara real · JetMax físico**. Con el brazo en HOME, pinza vacía, calibración vigente y recorrido despejado, pulsa **Activar automático · pinza vacía**. Espera un plástico ≥0.80 y 50 frames estables; luego aproxima, desciende, agarra, levanta y regresa a HOME sin soltar. El automático se desactiva al terminar: no deposita ni vuelve a agarrar el mismo objeto.
 
-En este PC las dependencias ya están instaladas; basta con los comandos de arranque. El [README del backend](../Backend-Rony-Pruebas/README.md) explica configuración, cámara, instalación y modos.
+La cámara MJPEG continúa durante los movimientos y el backend publica SSE a 10 Hz. Monitoreo muestra cada paso, XYZ y ángulo de pinza reportados por ROS. Estos valores son el estado del controlador, no mediciones de encoders. Comprueba el agarre en el video. **Cancelar siguientes movimientos** permite terminar el tramo ya enviado; no es una parada de emergencia física. Revisa el brazo y vacía la pinza antes de reiniciar y volver a activar.
 
-## Modos
+Las dependencias ya están instaladas en este PC. El [README del backend](../Backend-Rony-Pruebas/README.md) contiene límites, credenciales y funcionamiento completo. No ejecutes el notebook ni otro controlador al mismo tiempo.
 
-- **Cámara real:** backend con `run-live.ps1`; Angular con `npm start`.
-- **Video y ciclos simulados en Python:** backend con `run.ps1`; Angular con `npm start`.
-- **Demo local sin backend:** Angular con `npm run start:demo`.
+## Otros modos
 
-Para cambiar el modo de Python, detén el backend anterior con Ctrl+C antes de arrancar el otro. Cada modo tiene su etiqueta visible. Los movimientos y resultados del backend de prueba siguen siendo virtuales cuando la cámara es real.
+- `run-live.ps1` en el backend: cámara real y ciclos virtuales.
+- `run.ps1` en el backend: video y ciclos simulados.
+- `npm run start:demo` en Angular: demo estática local sin backend.
 
-## Verificación y compilación
+Detén el backend anterior con Ctrl+C antes de cambiar de modo. `npm start` siempre consume la API del puerto 8000.
+
+## Verificación
 
 ```sh
-npm run build              # Producción con API
-npm run build:demo         # Demo optimizada sin API
-npm run start:api          # Alias del arranque con API
+npm run build
+npm run build:demo
 npm run test:ci
 npm run check:architecture
 npm run format:check
@@ -44,8 +44,8 @@ npm run format:check
 
 ## API
 
-[Contrato OpenAPI](docs/api-contract.openapi.json). `/api` usa el mismo origen y el proxy de desarrollo apunta a `127.0.0.1:8000`. El cliente valida respuestas y no sustituye una cámara desconectada por datos simulados. La metadata opcional distingue fuente, transporte y ciclo virtual; se conserva el soporte JPEG para servidores que no la implementen.
+[Contrato OpenAPI](docs/api-contract.openapi.json). El proxy `/api` apunta a `127.0.0.1:8000` bajo el mismo origen. El cliente valida todas las respuestas y eventos; reconecta SSE con recuperación HTTP y conserva los datos anteriores como desactualizados durante errores. Los servidores sin SSE siguen usando consultas periódicas.
 
-Autenticación y permisos de producción corresponden al servidor. No guardes secretos en el código ni en archivos versionados.
+Los controles físicos envían únicamente `arm` o `cancel`; no contienen credenciales SSH ni coordenadas arbitrarias. No se permiten controles virtuales mientras se usa hardware. La autenticación y permisos de producción corresponden al servidor.
 
-El panel muestra residuos detectados de las tres categorías aunque no cumplan los requisitos del ciclo. La información observada (`detection`) se separa del objetivo del ciclo (`targetDetection`). “Simular un ciclo” conserva los requisitos de MIRA: plástico ≥0.80, proyección válida y 50 frames estables.
+El panel muestra aluminio, cartón y plástico detectados, aunque no sean candidatos para el agarre. `detection` describe la imagen; `targetDetection` congela el objetivo del ciclo. El ciclo físico conserva los requisitos del notebook y no se registra como una clasificación con depósito. `holdingObject` es `null` porque el hardware no confirma presencia: cerrar la pinza no prueba un agarre exitoso.
