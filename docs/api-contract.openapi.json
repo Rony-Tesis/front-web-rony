@@ -3,7 +3,7 @@
   "info": {
     "title": "Rony: cámara y JetMax",
     "version": "0.2.0",
-    "description": "MIRA camera, continuous telemetry and optional physical JetMax grasp cycle. Physical grasp ends at HOME with the gripper closed; object presence is unverified and no classification deposit is claimed. Physical commands are enabled only by explicit backend configuration. Local API defaults to loopback; shared deployments require authentication."
+    "description": "MIRA camera, continuous telemetry and optional physical JetMax grasp cycle. Physical grasp ends at HOME with the gripper closed; object presence is unverified and no classification deposit is claimed. Physical commands are enabled only by explicit backend configuration. Local API defaults to loopback; shared deployments require authentication. Reset explicitly returns HOME and opens the gripper; it never starts a new grasp automatically."
   },
   "paths": {
     "/v1/monitor/snapshot": {
@@ -486,7 +486,7 @@
         "properties": {
           "action": {
             "type": "string",
-            "enum": ["arm", "cancel"],
+            "enum": ["arm", "cancel", "reset"],
             "title": "Action"
           }
         },
@@ -628,7 +628,8 @@
               "moving",
               "holding",
               "cancelled",
-              "fault"
+              "fault",
+              "resetting"
             ],
             "title": "State"
           },
