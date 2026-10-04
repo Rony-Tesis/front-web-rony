@@ -22,17 +22,6 @@
               }}
             </p>
           </div>
-          @if (monitor.isSimulation) {
-            <button
-              type="button"
-              (click)="monitor.toggleSimulation()"
-              [attr.aria-pressed]="monitor.paused()"
-              [attr.aria-label]="monitor.paused() ? 'Reanudar simulación' : 'Pausar simulación'"
-            >
-              <span aria-hidden="true">{{ monitor.paused() ? '▶' : 'Ⅱ' }}</span
-              ><span class="toggle-label">{{ monitor.paused() ? 'Reanudar' : 'Pausar' }}</span>
-            </button>
-          }
         </header>
         <app-camera-feed
           [snapshot]="snapshot"
@@ -52,6 +41,7 @@
         <app-process-timeline [snapshot]="snapshot" [stateLabel]="monitor.stateLabel()" />
       </article>
     </div>
+    <app-simulation-controls />
     <div class="health">
       <app-system-health
         [snapshot]="snapshot"
