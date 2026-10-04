@@ -1,0 +1,84 @@
+<section aria-labelledby="dashboard-title">
+  <div class="title">
+    <h1 id="dashboard-title">Panel principal</h1>
+    <p>Resumen general del sistema de clasificación automatizada.</p>
+  </div>
+  @if (monitor.snapshot(); as snapshot) {
+    <div class="metrics">
+      <app-metric-card
+        label="Estado del sistema"
+        [value]="monitor.stale() ? 'Sin conexión' : monitor.online() ? 'Activo' : 'Revisar'"
+        [tone]="monitor.online() ? 'success' : 'danger'"
+        icon="settings"
+        [detail]="monitor.isSimulation ? 'Estado de la simulación' : 'Estado reportado por la API'"
+      />
+      <app-metric-card
+        label="Estado del monitor"
+        [value]="monitor.stateLabel()"
+        tone="blue"
+        icon="robot"
+        detail="Secuencia de clasificación"
+      />
+      <app-metric-card
+        label="Residuo actual"
+        [value]="snapshot.detection?.shortName ?? 'Sin objeto'"
+        icon="db"
+        detail="Detectado por visión"
+      />
+      <app-metric-card
+        label="Categoría detectada"
+        [value]="snapshot.detection ? categories[snapshot.detection.category] : '—'"
+        tone="blue"
+        icon="recycle"
+        [detail]="'Confianza: ' + (snapshot.detection?.confidence ?? 0 | percent: '1.0-0')"
+      />
+      <app-metric-card
+        label="Tiempo de ciclo actual"
+        [value]="(snapshot.process.elapsedMs / 1000 | number: '1.1-1') + ' s'"
+        icon="clock"
+        [detail]="
+          snapshot.experimentalMode === 'optimized' ? 'Con optimización' : 'Sin optimización'
+        "
+      />
+      <app-metric-card
+        label="Objetos procesados hoy"
+        [value]="snapshot.summary.processedToday"
+        icon="bars"
+        [detail]="monitor.isSimulation ? 'Datos de la simulación' : 'Registros del día'"
+      />
+    </div>
+    <article class="panel process-panel">
+      <header>
+        <h2>Flujo del proceso</h2>
+        <p>Estado actual de la secuencia de clasificación de residuos.</p>
+      </header>
+      <app-process-flow [process]="snapshot.process" />
+    </article>
+    <div class="row">
+      <article class="panel">
+        <header>
+          <h2>Operación actual</h2>
+          <p>Información del residuo en proceso de clasificación.</p>
+        </header>
+        <div class="operation">
+          <app-camera-feed
+            [snapshot]="snapshot"
+            [simulation]="monitor.isSimulation"
+            [paused]="monitor.paused()"
+            [compact]="true"
+          /><app-detection-details
+            [detection]="snapshot.detection"
+            [experimentalMode]="snapshot.experimentalMode"
+          />
+        </div>
+      </article>
+      <article class="panel recent">
+        <header>
+          <h2>Últimas operaciones</h2>
+          <p>Registro de las operaciones más recientes del sistema.</p>
+        </header>
+        <app-operation-table [operations]="snapshot.operations.slice(0, 4)" [compact]="true" />
+      </article>
+    </div>
+  }
+</section>
