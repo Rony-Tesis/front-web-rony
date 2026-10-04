@@ -118,6 +118,61 @@ describe('HTTP monitoring boundary', () => {
     expect(next).toHaveBeenCalledWith(dto);
   });
 
+  it('switches to continuous validated SSE without polling and closes on destruction', () => {
+    class FakeEvents {
+      static CLOSED = 2;
+      static instances: FakeEvents[] = [];
+      onmessage: ((event: { data: string }) => void) | null = null;
+      onerror: (() => void) | null = null;
+      readyState = 1;
+      close = vi.fn();
+      constructor(
+        readonly url: string,
+        readonly options: unknown,
+      ) {
+        FakeEvents.instances.push(this);
+      }
+    }
+    vi.stubGlobal('EventSource', FakeEvents);
+    const updates: MonitorUpdate[] = [];
+    const sub = TestBed.inject(HttpMonitorRepository)
+      .watch()
+      .subscribe((value) => updates.push(value));
+    try {
+      vi.advanceTimersByTime(0);
+      const dto = {
+        ...new SimulationEngine(Date.now()).snapshot(Date.now()),
+        telemetryTransport: 'sse',
+      };
+      http.expectOne(endpoint).flush(dto);
+      const source = FakeEvents.instances[0]!;
+      expect(source.url).toBe('/api/v1/monitor/events');
+      expect(source.options).toEqual({ withCredentials: true });
+      for (let i = 0; i < 20; i++) {
+        source.onmessage!({ data: JSON.stringify({ ...dto, framesPerSecond: 9.5 }) });
+        vi.advanceTimersByTime(100);
+      }
+      http.expectNone(endpoint);
+      expect(updates.at(-1)?.snapshot?.framesPerSecond).toBe(9.5);
+      source.onmessage!({ data: '{"private-invalid-data":true}' });
+      expect(source.close).toHaveBeenCalled();
+      expect(updates.at(-1)?.error).toContain('Telemetría');
+      expect(updates.at(-1)?.error).not.toContain('private-invalid-data');
+    } finally {
+      sub.unsubscribe();
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('sends only named physical actions and refreshes the snapshot', () => {
+    TestBed.inject(HttpMonitorRepository).commandRobot('cancel').subscribe();
+    const command = http.expectOne('/api/v1/robot/commands');
+    expect(command.request.body).toEqual({ action: 'cancel' });
+    expect(command.request.headers.get('X-Rony-Control')).toBe('1');
+    command.flush({});
+    http.expectOne(endpoint).flush(new SimulationEngine(Date.now()).snapshot(Date.now()));
+  });
+
   it('rejects external API paths and protocol-relative credential destinations', () => {
     expect(() => apiEndpoint('https://example.com', 'v1/monitor/snapshot')).toThrow();
     expect(() => apiEndpoint('//example.com', 'v1/monitor/snapshot')).toThrow();
