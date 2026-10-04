@@ -51,6 +51,12 @@
           Estabilidad: {{ monitor.snapshot()?.simulationState?.stableFrames ?? 0 }} / 50 frames.
         </p>
       }
+      @if (robot.state === 'resetting') {
+        <p>
+          Reseteando el brazo. Espera que llegue a HOME y abra la pinza antes de activar otra
+          prueba.
+        </p>
+      }
       @if (robot.state === 'holding') {
         <p>
           La pinza se conserva cerrada en HOME. Comprueba el agarre en la cámara. No se soltará ni
@@ -59,7 +65,15 @@
       }
       <div class="actions">
         <button type="button" (click)="monitor.armRobot()" [disabled]="!monitor.canArmRobot()">
-          Activar automático · pinza vacía
+          Activar funcionamiento
+        </button>
+        <button
+          class="reset"
+          type="button"
+          (click)="monitor.resetRobot()"
+          [disabled]="!monitor.canResetRobot()"
+        >
+          Resetear · HOME y abrir pinza
         </button>
         <button
           class="cancel"
@@ -72,8 +86,9 @@
       </div>
       <p class="note">
         Cancelar permite terminar el tramo ya enviado y bloquea los siguientes; no es una parada de
-        emergencia. Tras un agarre o cancelación, reinicia el backend únicamente después de revisar
-        el brazo y vaciar la pinza.
+        emergencia. Resetear vuelve a HOME y abre la pinza: puede soltar el objeto. Prepara una
+        superficie de recepción y despeja el recorrido antes de pulsarlo. Después podrás activar
+        otra prueba sin reiniciar el backend.
       </p>
       @if (robot.error) {
         <p class="error" role="alert">{{ robot.error }}</p>
