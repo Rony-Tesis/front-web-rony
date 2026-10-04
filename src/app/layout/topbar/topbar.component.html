@@ -1,0 +1,18 @@
+<header class="topbar">
+  <div class="right">
+    <span class="connection" [class.offline]="!monitor.online()"
+      ><i></i
+      >{{
+        monitor.isSimulation
+          ? 'Modo simulación'
+          : monitor.online()
+            ? 'Sistema en línea'
+            : 'Sistema sin conexión'
+      }}</span
+    >
+    <span class="divider"></span>
+    <time>{{ now() | date: 'dd MMM yyyy HH:mm:ss' : '-0500' }}</time>
+    <span class="divider"></span>
+    <span class="avatar" aria-label="Monitor de clasificación">MO</span>
+  </div>
+</header>
