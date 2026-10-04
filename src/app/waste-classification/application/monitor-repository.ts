@@ -1,6 +1,6 @@
 import { InjectionToken } from '@angular/core';
 import { Observable } from 'rxjs';
-import { MonitorSnapshot, SimulationAction } from '../domain/monitor.models';
+import { MonitorSnapshot, SimulationAction, RobotAction } from '../domain/monitor.models';
 
 export interface MonitorUpdate {
   readonly snapshot: MonitorSnapshot | null;
@@ -10,6 +10,7 @@ export interface MonitorUpdate {
 export interface MonitorRepository {
   watch(): Observable<MonitorUpdate>;
   setSimulationPaused(paused: boolean): void;
+  commandRobot?(action: RobotAction): Observable<MonitorSnapshot>;
   commandSimulation?(action: SimulationAction): Observable<MonitorSnapshot>;
 }
 
