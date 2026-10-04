@@ -55,7 +55,17 @@ export interface EquipmentHealth {
 }
 
 /** A coherent read model of the classification bounded context. */
+export interface SimulationState {
+  readonly paused: boolean;
+  readonly cycleActive: boolean;
+  readonly stableFrames: number;
+  readonly requiredStableFrames: number;
+}
+
+export type SimulationAction = 'pause' | 'resume' | 'cycle';
+
 export interface MonitorSnapshot {
+  readonly simulationState?: SimulationState;
   readonly sourceMode?: 'simulation' | 'live';
   readonly motionMode?: 'simulation';
   readonly cameraTransport?: 'jpeg' | 'mjpeg';
