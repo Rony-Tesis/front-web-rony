@@ -47,3 +47,5 @@ npm run format:check
 [Contrato OpenAPI](docs/api-contract.openapi.json). `/api` usa el mismo origen y el proxy de desarrollo apunta a `127.0.0.1:8000`. El cliente valida respuestas y no sustituye una cámara desconectada por datos simulados. La metadata opcional distingue fuente, transporte y ciclo virtual; se conserva el soporte JPEG para servidores que no la implementen.
 
 Autenticación y permisos de producción corresponden al servidor. No guardes secretos en el código ni en archivos versionados.
+
+El panel muestra residuos detectados de las tres categorías aunque no cumplan los requisitos del ciclo. La información observada (`detection`) se separa del objetivo del ciclo (`targetDetection`). “Simular un ciclo” conserva los requisitos de MIRA: plástico ≥0.80, proyección válida y 50 frames estables.
