@@ -18,7 +18,7 @@
                     ? 'Video simulado compartido por el backend; movimientos virtuales.'
                     : snapshot.motionMode === 'simulation'
                       ? 'Video de MIRA con movimientos y resultados virtuales.'
-                      : 'Transmisión de la cámara del sistema.'
+                      : 'Cámara real y movimiento físico del JetMax.'
               }}
             </p>
           </div>
@@ -41,6 +41,7 @@
         <app-process-timeline [snapshot]="snapshot" [stateLabel]="monitor.stateLabel()" />
       </article>
     </div>
+    <app-robot-controls />
     <app-simulation-controls />
     <div class="health">
       <app-system-health
