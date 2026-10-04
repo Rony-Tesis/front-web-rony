@@ -1,0 +1,19 @@
+<a class="skip-link" href="#main-content">Ir al contenido</a>
+<app-sidebar />
+<div class="shell">
+  <app-topbar />
+  <main id="main-content" tabindex="-1">
+    @if (monitor.loading()) {
+      <p class="message" role="status">Cargando información del sistema…</p>
+    }
+    @if (monitor.error(); as error) {
+      <div class="message error" role="alert">
+        {{ error }}
+        @if (monitor.stale()) {
+          <span>Se muestran los últimos datos recibidos; pueden estar desactualizados.</span>
+        }
+      </div>
+    }
+    <router-outlet />
+  </main>
+</div>
