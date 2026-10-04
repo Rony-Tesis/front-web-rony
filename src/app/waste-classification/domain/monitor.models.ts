@@ -15,8 +15,8 @@ export interface Detection {
   /** Normalized probability, from zero to one. */
   readonly confidence: number;
   readonly pixel: Position;
-  readonly offsetMm: Position;
-  readonly targetMm: Position;
+  readonly offsetMm: Position | null;
+  readonly targetMm: Position | null;
   readonly destination: string;
 }
 
@@ -60,6 +60,7 @@ export interface SimulationState {
   readonly cycleActive: boolean;
   readonly stableFrames: number;
   readonly requiredStableFrames: number;
+  readonly targetReady?: boolean;
 }
 
 export type SimulationAction = 'pause' | 'resume' | 'cycle';
@@ -72,6 +73,7 @@ export interface MonitorSnapshot {
   readonly experimentalMode: 'optimized' | 'baseline';
   readonly updatedAt: string;
   readonly detection: Detection | null;
+  readonly targetDetection?: Detection | null;
   readonly process: ProcessState;
   readonly summary: ClassificationSummary;
   readonly operations: readonly ClassificationOperation[];
