@@ -65,10 +65,45 @@ export interface SimulationState {
 
 export type SimulationAction = 'pause' | 'resume' | 'cycle';
 
+export type RobotAction = 'arm' | 'cancel';
+export interface RobotState {
+  readonly connected: boolean;
+  readonly state:
+    | 'connecting'
+    | 'idle'
+    | 'preparing'
+    | 'waiting'
+    | 'countdown'
+    | 'moving'
+    | 'holding'
+    | 'cancelled'
+    | 'fault';
+  readonly stepLabel: string;
+  readonly autoEnabled: boolean;
+  readonly cycleActive: boolean;
+  readonly holdingObject: boolean | null;
+  readonly completedGrasps: number;
+  readonly reportedPosition: (Position & { readonly z: number }) | null;
+  readonly gripperAngle: number | null;
+  readonly telemetryAt: string | null;
+  readonly error: string | null;
+}
+
+export const PHYSICAL_STAGES = [
+  { name: 'Preparación', description: 'Posicionar en HOME y abrir la pinza vacía.' },
+  { name: 'Detección estable', description: 'Plástico ≥0.80, 50 frames y cuenta regresiva.' },
+  { name: 'Aproximación', description: 'Posicionar a Z=120 mm.' },
+  { name: 'Agarre', description: 'Descender a Z=90 mm y cerrar la pinza a 82°.' },
+  { name: 'Levantamiento', description: 'Elevar el objeto a Z=120 mm.' },
+  { name: 'Regreso a HOME', description: 'Volver a HOME manteniendo la pinza cerrada.' },
+] as const;
+
 export interface MonitorSnapshot {
   readonly simulationState?: SimulationState;
   readonly sourceMode?: 'simulation' | 'live';
-  readonly motionMode?: 'simulation';
+  readonly motionMode?: 'simulation' | 'physical';
+  readonly telemetryTransport?: 'sse';
+  readonly robotState?: RobotState | null;
   readonly cameraTransport?: 'jpeg' | 'mjpeg';
   readonly experimentalMode: 'optimized' | 'baseline';
   readonly updatedAt: string;
@@ -90,7 +125,7 @@ export const CATEGORY_LABELS: Readonly<Record<WasteCategory, string>> = {
 export const EQUIPMENT_LABELS: Readonly<Record<EquipmentId, string>> = {
   camera: 'Cámara',
   yolo: 'Modelo YOLO',
-  robot: 'Monitor',
+  robot: 'JetMax',
   gripper: 'Pinza',
   planner: 'Planificación',
 };
