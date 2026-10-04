@@ -1,0 +1,59 @@
+<section aria-labelledby="monitoring-title">
+  <div class="title">
+    <h1 id="monitoring-title">Monitoreo</h1>
+    <p>Seguimiento del proceso de clasificación en tiempo real.</p>
+  </div>
+  @if (monitor.snapshot(); as snapshot) {
+    <div class="grid">
+      <article class="panel">
+        <header>
+          <div class="icon"><app-icon name="camera" /></div>
+          <div>
+            <h2>Vista de detección</h2>
+            <p>
+              {{
+                monitor.isSimulation
+                  ? 'Transmisión simulada en tiempo real de la cámara.'
+                  : 'Últimas capturas de la cámara del sistema.'
+              }}
+            </p>
+          </div>
+          @if (monitor.isSimulation) {
+            <button
+              type="button"
+              (click)="monitor.toggleSimulation()"
+              [attr.aria-pressed]="monitor.paused()"
+              [attr.aria-label]="monitor.paused() ? 'Reanudar simulación' : 'Pausar simulación'"
+            >
+              <span aria-hidden="true">{{ monitor.paused() ? '▶' : 'Ⅱ' }}</span
+              ><span class="toggle-label">{{ monitor.paused() ? 'Reanudar' : 'Pausar' }}</span>
+            </button>
+          }
+        </header>
+        <app-camera-feed
+          [snapshot]="snapshot"
+          [simulation]="monitor.isSimulation"
+          [paused]="monitor.paused()"
+        />
+        <app-detection-details [detection]="snapshot.detection" [selection]="true" />
+      </article>
+      <article class="panel">
+        <header>
+          <div class="icon"><app-icon name="settings" /></div>
+          <div>
+            <h2>Estado del monitor</h2>
+            <p>Información del estado actual del proceso.</p>
+          </div>
+        </header>
+        <app-process-timeline [snapshot]="snapshot" [stateLabel]="monitor.stateLabel()" />
+      </article>
+    </div>
+    <div class="health">
+      <app-system-health
+        [snapshot]="snapshot"
+        [expanded]="true"
+        [simulation]="monitor.isSimulation"
+      />
+    </div>
+  }
+</section>
