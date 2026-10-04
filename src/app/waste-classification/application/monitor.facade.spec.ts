@@ -11,6 +11,7 @@ describe('Shared monitor state', () => {
     const pause = vi.fn();
     const commands = new Subject<import('../domain/monitor.models').MonitorSnapshot>();
     const commandSimulation = vi.fn(() => commands.asObservable());
+    const commandRobot = vi.fn(() => commands.asObservable());
     TestBed.configureTestingModule({
       providers: [
         { provide: RUNTIME_CONFIG, useValue: { dataSource } },
@@ -20,11 +21,19 @@ describe('Shared monitor state', () => {
             watch: () => stream.asObservable(),
             setSimulationPaused: pause,
             commandSimulation,
+            commandRobot,
           },
         },
       ],
     });
-    return { facade: TestBed.inject(MonitorFacade), stream, pause, commands, commandSimulation };
+    return {
+      facade: TestBed.inject(MonitorFacade),
+      stream,
+      pause,
+      commands,
+      commandSimulation,
+      commandRobot,
+    };
   }
 
   it('retains the last valid snapshot as stale after an API error and recovers', () => {
@@ -102,6 +111,54 @@ describe('Shared monitor state', () => {
     expect(facade.canStartVirtualCycle()).toBe(false);
     stream.next({ snapshot: dto, error: 'Sin conexión' });
     expect(facade.canControlVirtual()).toBe(false);
+  });
+
+  it('requires live physical state for arming and permits cancellation when telemetry becomes stale', () => {
+    const { facade, stream, commands, commandRobot } = setup('api');
+    const seed = new SimulationEngine(Date.now()).snapshot(Date.now());
+    const robotState = {
+      connected: true,
+      state: 'idle' as const,
+      stepLabel: 'Listo',
+      autoEnabled: false,
+      cycleActive: false,
+      holdingObject: null,
+      completedGrasps: 0,
+      reportedPosition: { x: 0, y: -162.94, z: 212.8 },
+      gripperAngle: 90,
+      telemetryAt: seed.updatedAt,
+      error: null,
+    };
+    const dto = {
+      ...seed,
+      sourceMode: 'live' as const,
+      motionMode: 'physical' as const,
+      robotState,
+    };
+    stream.next({ snapshot: dto, error: null });
+    expect(facade.canArmRobot()).toBe(true);
+    expect(facade.canControlVirtual()).toBe(false);
+    facade.armRobot();
+    facade.armRobot();
+    expect(commandRobot.mock.calls).toEqual([['arm']]);
+    commands.complete();
+    stream.next({
+      snapshot: {
+        ...dto,
+        robotState: { ...robotState, state: 'moving', autoEnabled: true, cycleActive: true },
+      },
+      error: 'Telemetry lost',
+    });
+    expect(facade.canArmRobot()).toBe(false);
+    expect(facade.canCancelRobot()).toBe(true);
+    facade.cancelRobot();
+    expect(commandRobot.mock.calls.at(-1)).toEqual(['cancel']);
+    stream.next({
+      snapshot: { ...dto, robotState: { ...robotState, state: 'holding', gripperAngle: 80 } },
+      error: null,
+    });
+    expect(facade.canArmRobot()).toBe(false);
+    expect(facade.canCancelRobot()).toBe(false);
   });
 
   it('shows detected aluminum while respecting backend target eligibility', () => {
