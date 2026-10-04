@@ -90,6 +90,18 @@ function operation(value: unknown): ClassificationOperation {
   };
 }
 
+function simulationState(value: unknown) {
+  const source = record(value);
+  const requiredStableFrames = integer(source['requiredStableFrames'], 10000);
+  if (requiredStableFrames === 0) throw new Error('Invalid stability threshold.');
+  return {
+    paused: boolean(source['paused']),
+    cycleActive: boolean(source['cycleActive']),
+    stableFrames: integer(source['stableFrames']),
+    requiredStableFrames,
+  };
+}
+
 /** Anti-corruption layer: unknown transport data is reconstructed before entering the application. */
 export function mapMonitorSnapshot(value: unknown): MonitorSnapshot {
   const source = record(value);
@@ -136,6 +148,9 @@ export function mapMonitorSnapshot(value: unknown): MonitorSnapshot {
     ...(source['cameraTransport'] === undefined
       ? {}
       : { cameraTransport: choice(source['cameraTransport'], ['jpeg', 'mjpeg'] as const) }),
+    ...(source['simulationState'] === undefined
+      ? {}
+      : { simulationState: simulationState(source['simulationState']) }),
     experimentalMode: choice(source['experimentalMode'], ['optimized', 'baseline']),
     updatedAt: date(source['updatedAt']),
     detection: detection(source['detection']),
