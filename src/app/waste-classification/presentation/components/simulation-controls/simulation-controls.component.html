@@ -5,9 +5,7 @@
       <p>Los movimientos y resultados son simulados. La cámara continúa transmitiendo al pausar.</p>
       @if (monitor.snapshot()?.simulationState; as state) {
         <p>
-          Estabilidad del objetivo: {{ state.stableFrames }}/{{
-            state.requiredStableFrames
-          }}
+          Estabilidad del objetivo: {{ state.stableFrames }}/{{ state.requiredStableFrames }}
           frames.
         </p>
         @if (
