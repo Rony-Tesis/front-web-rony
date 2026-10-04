@@ -1,7 +1,12 @@
 import { DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { IconComponent } from '../../../../shared/ui/icon/icon.component';
-import { MonitorSnapshot, PROCESS_STAGES, stageStatus } from '../../../domain/monitor.models';
+import {
+  MonitorSnapshot,
+  PROCESS_STAGES,
+  PHYSICAL_STAGES,
+  stageStatus,
+} from '../../../domain/monitor.models';
 
 @Component({
   selector: 'app-process-timeline',
@@ -18,6 +23,10 @@ export class ProcessTimelineComponent {
       ? this.snapshot().detection
       : this.snapshot().targetDetection,
   );
-  protected readonly stages = PROCESS_STAGES;
-  protected readonly status = stageStatus;
+  protected readonly stages = computed(() =>
+    this.snapshot().motionMode === 'physical' ? PHYSICAL_STAGES : PROCESS_STAGES,
+  );
+  protected status(process: MonitorSnapshot['process'], index: number) {
+    return this.snapshot().robotState?.state === 'holding' ? 'done' : stageStatus(process, index);
+  }
 }
