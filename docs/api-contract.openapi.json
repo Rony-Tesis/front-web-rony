@@ -1,0 +1,558 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Waste Classification Monitor API (proposed)",
+    "version": "1.0.0",
+    "description": "Proposed read-only API; the backend is not implemented. Invariants: summary.total equals successful plus failed; processedToday does not exceed total; operation IDs and equipment IDs are unique. A completed cycle has 100% progress, a non-null result and an open gripper. Stage elapsed time cannot exceed its corresponding stage duration. Daily counts use America/Lima."
+  },
+  "servers": [
+    {
+      "url": "/api"
+    }
+  ],
+  "security": [
+    {
+      "sessionCookie": []
+    }
+  ],
+  "paths": {
+    "/v1/monitor/snapshot": {
+      "get": {
+        "operationId": "getMonitorSnapshot",
+        "summary": "Coherent latest classification snapshot",
+        "responses": {
+          "200": {
+            "description": "A snapshot with global counters and a bounded recent history.",
+            "headers": {
+              "Cache-Control": {
+                "description": "Use no-store for authorized monitoring data.",
+                "schema": {
+                  "type": "string",
+                  "example": "no-store"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MonitorSnapshot"
+                },
+                "example": {
+                  "experimentalMode": "optimized",
+                  "updatedAt": "2026-10-03T15:00:00.000Z",
+                  "detection": {
+                    "residue": "Pedazo de cartón",
+                    "shortName": "Cartón",
+                    "category": "cardboard",
+                    "confidence": 0.86,
+                    "pixel": {
+                      "x": 174,
+                      "y": 254
+                    },
+                    "offsetMm": {
+                      "x": 55.5,
+                      "y": -36
+                    },
+                    "targetMm": {
+                      "x": 55.5,
+                      "y": -199
+                    },
+                    "destination": "Contenedor de cartón"
+                  },
+                  "process": {
+                    "stageIndex": 0,
+                    "elapsedMs": 0,
+                    "stageElapsedMs": 0,
+                    "stageDurationsMs": [1800, 1400, 2200, 3000, 5500, 2000],
+                    "progressPercent": 0,
+                    "completed": false,
+                    "lastResult": null,
+                    "gripperClosed": false
+                  },
+                  "summary": {
+                    "total": 128,
+                    "successful": 119,
+                    "failed": 9,
+                    "processedToday": 48,
+                    "averageDurationMs": 15900
+                  },
+                  "operations": [
+                    {
+                      "residue": "Lata de aluminio",
+                      "category": "aluminum",
+                      "confidence": 0.94,
+                      "durationMs": 15800,
+                      "id": "demo-seed-0",
+                      "completedAt": "2026-10-03T14:59:08.000Z",
+                      "result": "success"
+                    },
+                    {
+                      "residue": "Botella plástica",
+                      "category": "plastic",
+                      "confidence": 0.87,
+                      "durationMs": 16200,
+                      "id": "demo-seed-1",
+                      "completedAt": "2026-10-03T14:58:16.000Z",
+                      "result": "success"
+                    },
+                    {
+                      "residue": "Caja de cartón",
+                      "category": "cardboard",
+                      "confidence": 0.91,
+                      "durationMs": 15400,
+                      "id": "demo-seed-2",
+                      "completedAt": "2026-10-03T14:57:24.000Z",
+                      "result": "success"
+                    },
+                    {
+                      "residue": "Tapa plástica",
+                      "category": "plastic",
+                      "confidence": 0.76,
+                      "durationMs": 17100,
+                      "id": "demo-seed-3",
+                      "completedAt": "2026-10-03T14:56:32.000Z",
+                      "result": "failure"
+                    },
+                    {
+                      "residue": "Tubo de cartón",
+                      "category": "cardboard",
+                      "confidence": 0.82,
+                      "durationMs": 15700,
+                      "id": "demo-seed-4",
+                      "completedAt": "2026-10-03T14:55:40.000Z",
+                      "result": "success"
+                    },
+                    {
+                      "residue": "Lata de aluminio",
+                      "category": "aluminum",
+                      "confidence": 0.89,
+                      "durationMs": 16000,
+                      "id": "demo-seed-5",
+                      "completedAt": "2026-10-03T14:54:48.000Z",
+                      "result": "success"
+                    }
+                  ],
+                  "equipment": [
+                    {
+                      "id": "camera",
+                      "status": "online"
+                    },
+                    {
+                      "id": "yolo",
+                      "status": "online"
+                    },
+                    {
+                      "id": "robot",
+                      "status": "online"
+                    },
+                    {
+                      "id": "gripper",
+                      "status": "online"
+                    },
+                    {
+                      "id": "planner",
+                      "status": "online"
+                    }
+                  ],
+                  "framesPerSecond": 29.8
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required; polling stops."
+          },
+          "403": {
+            "description": "Insufficient permissions; polling stops."
+          },
+          "429": {
+            "description": "Rate limited.",
+            "headers": {
+              "Retry-After": {
+                "description": "Delay in seconds, honored up to 300 seconds.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Monitoring service unavailable."
+          }
+        }
+      }
+    },
+    "/v1/monitor/frame": {
+      "get": {
+        "operationId": "getMonitorFrame",
+        "summary": "Optional latest authorized camera image",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "at",
+            "required": false,
+            "description": "Cache key based on snapshot.updatedAt; not a guarantee of synchronized frame time.",
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "maxLength": 40
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Latest camera capture.",
+            "headers": {
+              "Cache-Control": {
+                "description": "Use no-store for authorized monitoring data.",
+                "schema": {
+                  "type": "string",
+                  "example": "no-store"
+                }
+              }
+            },
+            "content": {
+              "image/jpeg": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/png": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No frame available."
+          },
+          "401": {
+            "description": "Authentication required; polling stops."
+          },
+          "403": {
+            "description": "Insufficient permissions; polling stops."
+          },
+          "404": {
+            "description": "Camera frame endpoint or frame unavailable."
+          },
+          "429": {
+            "description": "Rate limited.",
+            "headers": {
+              "Retry-After": {
+                "description": "Delay in seconds, honored up to 300 seconds.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Monitoring service unavailable."
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Position": {
+        "type": "object",
+        "required": ["x", "y"],
+        "properties": {
+          "x": {
+            "type": "number",
+            "minimum": -1000000,
+            "maximum": 1000000
+          },
+          "y": {
+            "type": "number",
+            "minimum": -1000000,
+            "maximum": 1000000
+          }
+        },
+        "additionalProperties": false
+      },
+      "Detection": {
+        "type": "object",
+        "required": [
+          "residue",
+          "shortName",
+          "category",
+          "confidence",
+          "pixel",
+          "offsetMm",
+          "targetMm",
+          "destination"
+        ],
+        "properties": {
+          "residue": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "shortName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 40
+          },
+          "category": {
+            "type": "string",
+            "enum": ["cardboard", "plastic", "aluminum"]
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "pixel": {
+            "$ref": "#/components/schemas/Position"
+          },
+          "offsetMm": {
+            "$ref": "#/components/schemas/Position"
+          },
+          "targetMm": {
+            "$ref": "#/components/schemas/Position"
+          },
+          "destination": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          }
+        },
+        "additionalProperties": false
+      },
+      "ClassificationOperation": {
+        "type": "object",
+        "required": [
+          "id",
+          "completedAt",
+          "residue",
+          "category",
+          "confidence",
+          "result",
+          "durationMs"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "completedAt": {
+            "type": "string",
+            "format": "date-time",
+            "maxLength": 40
+          },
+          "residue": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "category": {
+            "type": "string",
+            "enum": ["cardboard", "plastic", "aluminum"]
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "result": {
+            "type": "string",
+            "enum": ["success", "failure"]
+          },
+          "durationMs": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 86400000
+          }
+        },
+        "additionalProperties": false
+      },
+      "ProcessState": {
+        "type": "object",
+        "required": [
+          "stageIndex",
+          "elapsedMs",
+          "stageElapsedMs",
+          "stageDurationsMs",
+          "progressPercent",
+          "completed",
+          "lastResult",
+          "gripperClosed"
+        ],
+        "properties": {
+          "stageIndex": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 5
+          },
+          "elapsedMs": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 86400000
+          },
+          "stageElapsedMs": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 86400000
+          },
+          "stageDurationsMs": {
+            "type": "array",
+            "minItems": 6,
+            "maxItems": 6,
+            "items": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 86400000
+            }
+          },
+          "progressPercent": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "completed": {
+            "type": "boolean"
+          },
+          "lastResult": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": ["success", "failure"]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "gripperClosed": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ClassificationSummary": {
+        "type": "object",
+        "required": ["processedToday", "total", "successful", "failed", "averageDurationMs"],
+        "properties": {
+          "processedToday": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "successful": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "failed": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "averageDurationMs": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 86400000
+          }
+        },
+        "additionalProperties": false
+      },
+      "EquipmentHealth": {
+        "type": "object",
+        "required": ["id", "status"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "enum": ["camera", "yolo", "robot", "gripper", "planner"]
+          },
+          "status": {
+            "type": "string",
+            "enum": ["online", "offline", "unknown"]
+          }
+        },
+        "additionalProperties": false
+      },
+      "MonitorSnapshot": {
+        "type": "object",
+        "required": [
+          "experimentalMode",
+          "updatedAt",
+          "detection",
+          "process",
+          "summary",
+          "operations",
+          "equipment",
+          "framesPerSecond"
+        ],
+        "properties": {
+          "experimentalMode": {
+            "type": "string",
+            "enum": ["optimized", "baseline"]
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "maxLength": 40
+          },
+          "detection": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Detection"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "process": {
+            "$ref": "#/components/schemas/ProcessState"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/ClassificationSummary"
+          },
+          "operations": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/ClassificationOperation"
+            }
+          },
+          "equipment": {
+            "type": "array",
+            "minItems": 5,
+            "maxItems": 5,
+            "items": {
+              "$ref": "#/components/schemas/EquipmentHealth"
+            }
+          },
+          "framesPerSecond": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 240
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "securitySchemes": {
+      "sessionCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "SESSION",
+        "description": "Proposed server session cookie. Actual cookie name/authentication provider must be agreed with the backend; use HttpOnly, Secure, and appropriate SameSite."
+      }
+    }
+  }
+}
