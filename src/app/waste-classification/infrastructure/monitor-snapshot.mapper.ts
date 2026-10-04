@@ -71,8 +71,8 @@ function detection(value: unknown): Detection | null {
     category: choice(source['category'], ['cardboard', 'plastic', 'aluminum']),
     confidence: number(source['confidence'], 0, 1),
     pixel: position(source['pixel']),
-    offsetMm: position(source['offsetMm']),
-    targetMm: position(source['targetMm']),
+    offsetMm: source['offsetMm'] === null ? null : position(source['offsetMm']),
+    targetMm: source['targetMm'] === null ? null : position(source['targetMm']),
     destination: text(source['destination']),
   };
 }
@@ -99,6 +99,7 @@ function simulationState(value: unknown) {
     cycleActive: boolean(source['cycleActive']),
     stableFrames: integer(source['stableFrames']),
     requiredStableFrames,
+    ...(source['targetReady'] === undefined ? {} : { targetReady: boolean(source['targetReady']) }),
   };
 }
 
@@ -154,6 +155,9 @@ export function mapMonitorSnapshot(value: unknown): MonitorSnapshot {
     experimentalMode: choice(source['experimentalMode'], ['optimized', 'baseline']),
     updatedAt: date(source['updatedAt']),
     detection: detection(source['detection']),
+    ...(source['targetDetection'] === undefined
+      ? {}
+      : { targetDetection: detection(source['targetDetection']) }),
     process: {
       stageIndex,
       completed,
