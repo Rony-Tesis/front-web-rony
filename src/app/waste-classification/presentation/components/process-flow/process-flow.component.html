@@ -1,0 +1,17 @@
+<ol class="flow" aria-label="Etapas del proceso de clasificación">
+  @for (stage of stages; track stage.name; let index = $index) {
+    <li
+      [class]="status(process(), index)"
+      [attr.aria-current]="status(process(), index) === 'current' ? 'step' : null"
+    >
+      <span><app-icon [name]="stage.icon" /></span><b>{{ stage.name }}</b>
+      <small>{{
+        status(process(), index) === 'done'
+          ? 'Completado'
+          : status(process(), index) === 'current'
+            ? 'En proceso'
+            : 'Pendiente'
+      }}</small>
+    </li>
+  }
+</ol>
