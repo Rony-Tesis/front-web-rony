@@ -80,6 +80,20 @@ export class MonitorFacade {
       (state.autoEnabled || state.cycleActive)
     );
   });
+  readonly canResetRobot = computed(() => {
+    const snapshot = this.snapshot();
+    const robot = snapshot?.robotState;
+    return (
+      !!this.repository.commandRobot &&
+      !this.error() &&
+      !this.controlPending() &&
+      snapshot?.motionMode === 'physical' &&
+      !!robot &&
+      !robot.cycleActive &&
+      robot.state !== 'connecting' &&
+      robot.state !== 'resetting'
+    );
+  });
   readonly stateLabel = computed(() => {
     const snapshot = this.snapshot();
     if (!snapshot) return 'En espera';
@@ -131,6 +145,10 @@ export class MonitorFacade {
 
   cancelRobot(): void {
     if (this.canCancelRobot()) this.commandRobot('cancel');
+  }
+
+  resetRobot(): void {
+    if (this.canResetRobot()) this.commandRobot('reset');
   }
 
   private commandRobot(action: RobotAction): void {
