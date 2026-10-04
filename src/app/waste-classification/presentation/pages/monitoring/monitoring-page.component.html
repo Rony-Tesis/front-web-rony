@@ -4,6 +4,7 @@
     <p>Seguimiento del proceso de clasificación en tiempo real.</p>
   </div>
   @if (monitor.snapshot(); as snapshot) {
+    <app-robot-controls />
     <div class="grid">
       <article class="panel">
         <header>
@@ -41,7 +42,6 @@
         <app-process-timeline [snapshot]="snapshot" [stateLabel]="monitor.stateLabel()" />
       </article>
     </div>
-    <app-robot-controls />
     <app-simulation-controls />
     <div class="health">
       <app-system-health
