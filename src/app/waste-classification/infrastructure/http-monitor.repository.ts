@@ -1,8 +1,20 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { catchError, defer, exhaustMap, filter, map, of, takeWhile, timeout, timer } from 'rxjs';
+import {
+  catchError,
+  defer,
+  exhaustMap,
+  filter,
+  map,
+  of,
+  takeWhile,
+  timeout,
+  timer,
+  switchMap,
+} from 'rxjs';
 import { apiEndpoint, RUNTIME_CONFIG } from '../../core/config/runtime-config';
 import { apiErrorMessage } from '../../core/http/api-error';
+import { SimulationAction } from '../domain/monitor.models';
 import { MonitorRepository } from '../application/monitor-repository';
 import { mapMonitorSnapshot } from './monitor-snapshot.mapper';
 
@@ -53,6 +65,20 @@ export class HttpMonitorRepository implements MonitorRepository {
     });
   }
 
-  // This application does not send physical robot commands through the simulation control.
+  commandSimulation(action: SimulationAction) {
+    return this.http
+      .post<unknown>(
+        apiEndpoint(this.config.apiBasePath, 'v1/simulation/commands'),
+        { action },
+        { withCredentials: true, headers: { 'X-Rony-Control': '1' } },
+      )
+      .pipe(
+        switchMap(() => this.http.get<unknown>(this.endpoint, { withCredentials: true })),
+        timeout(this.config.requestTimeoutMs),
+        map(mapMonitorSnapshot),
+      );
+  }
+
+  // Physical robot commands are not part of this repository.
   setSimulationPaused(_paused: boolean): void {}
 }
