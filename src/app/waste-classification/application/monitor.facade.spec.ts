@@ -103,4 +103,27 @@ describe('Shared monitor state', () => {
     stream.next({ snapshot: dto, error: 'Sin conexión' });
     expect(facade.canControlVirtual()).toBe(false);
   });
+
+  it('shows detected aluminum while respecting backend target eligibility', () => {
+    const { facade, stream } = setup('api');
+    const seed = new SimulationEngine(Date.now()).snapshot(Date.now());
+    stream.next({
+      snapshot: {
+        ...seed,
+        motionMode: 'simulation',
+        detection: { ...seed.detection!, category: 'aluminum', confidence: 0.38 },
+        targetDetection: null,
+        simulationState: {
+          paused: false,
+          cycleActive: false,
+          stableFrames: 100,
+          requiredStableFrames: 50,
+          targetReady: false,
+        },
+      },
+      error: null,
+    });
+    expect(facade.snapshot()?.detection?.category).toBe('aluminum');
+    expect(facade.canStartVirtualCycle()).toBe(false);
+  });
 });
