@@ -106,6 +106,7 @@ function robotState(value: unknown) {
       'holding',
       'cancelled',
       'fault',
+      'resetting',
     ] as const),
     stepLabel: text(source['stepLabel'], 200),
     autoEnabled: boolean(source['autoEnabled']),
