@@ -256,6 +256,31 @@
           }
         }
       }
+    },
+    "/v1/monitor/stream": {
+      "get": {
+        "operationId": "getMonitorStream",
+        "summary": "Shared MJPEG stream when cameraTransport is mjpeg",
+        "responses": {
+          "200": {
+            "description": "Latest shared frames; slow consumers skip old frames.",
+            "content": {
+              "multipart/x-mixed-replace": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required."
+          },
+          "503": {
+            "description": "Camera unavailable."
+          }
+        }
+      }
     }
   },
   "components": {
@@ -541,6 +566,21 @@
             "type": "number",
             "minimum": 0,
             "maximum": 240
+          },
+          "sourceMode": {
+            "type": "string",
+            "enum": ["simulation", "live"],
+            "description": "Optional camera provenance for the test backend."
+          },
+          "motionMode": {
+            "type": "string",
+            "enum": ["simulation"],
+            "description": "Optional explicit marker: process and results are virtual."
+          },
+          "cameraTransport": {
+            "type": "string",
+            "enum": ["jpeg", "mjpeg"],
+            "description": "Optional transport advertised by the backend; default JPEG."
           }
         },
         "additionalProperties": false
