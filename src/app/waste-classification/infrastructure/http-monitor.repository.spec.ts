@@ -104,6 +104,20 @@ describe('HTTP monitoring boundary', () => {
     expect(pending.cancelled).toBe(true);
   });
 
+  it('sends only virtual commands with credentials and refreshes the validated snapshot', () => {
+    const next = vi.fn();
+    TestBed.inject(HttpMonitorRepository).commandSimulation('pause').subscribe(next);
+    const command = http.expectOne('/api/v1/simulation/commands');
+    expect(command.request.method).toBe('POST');
+    expect(command.request.body).toEqual({ action: 'pause' });
+    expect(command.request.withCredentials).toBe(true);
+    expect(command.request.headers.get('X-Rony-Control')).toBe('1');
+    command.flush({ paused: true });
+    const dto = new SimulationEngine(Date.now()).snapshot(Date.now());
+    http.expectOne(endpoint).flush(dto);
+    expect(next).toHaveBeenCalledWith(dto);
+  });
+
   it('rejects external API paths and protocol-relative credential destinations', () => {
     expect(() => apiEndpoint('https://example.com', 'v1/monitor/snapshot')).toThrow();
     expect(() => apiEndpoint('//example.com', 'v1/monitor/snapshot')).toThrow();
