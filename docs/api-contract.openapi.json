@@ -384,10 +384,24 @@
             "$ref": "#/components/schemas/Position"
           },
           "offsetMm": {
-            "$ref": "#/components/schemas/Position"
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Position"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "targetMm": {
-            "$ref": "#/components/schemas/Position"
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Position"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "destination": {
             "type": "string",
@@ -630,6 +644,17 @@
           },
           "simulationState": {
             "$ref": "#/components/schemas/SimulationState"
+          },
+          "targetDetection": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Detection"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional eligible candidate or active virtual cycle target; distinct from visible detection."
           }
         },
         "additionalProperties": false
@@ -652,6 +677,10 @@
             "type": "integer",
             "minimum": 1,
             "maximum": 10000
+          },
+          "targetReady": {
+            "type": "boolean",
+            "description": "Eligible plastic target with valid projection and required stable frames."
           }
         }
       }
