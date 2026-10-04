@@ -65,7 +65,7 @@ export interface SimulationState {
 
 export type SimulationAction = 'pause' | 'resume' | 'cycle';
 
-export type RobotAction = 'arm' | 'cancel';
+export type RobotAction = 'arm' | 'cancel' | 'reset';
 export interface RobotState {
   readonly connected: boolean;
   readonly state:
@@ -77,7 +77,8 @@ export interface RobotState {
     | 'moving'
     | 'holding'
     | 'cancelled'
-    | 'fault';
+    | 'fault'
+    | 'resetting';
   readonly stepLabel: string;
   readonly autoEnabled: boolean;
   readonly cycleActive: boolean;
