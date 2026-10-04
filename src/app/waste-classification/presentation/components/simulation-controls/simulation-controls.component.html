@@ -1,0 +1,51 @@
+@if (monitor.canControlVirtual()) {
+  <section class="controls" aria-label="Controles del ciclo virtual">
+    <div>
+      <h2>Ciclo virtual</h2>
+      <p>Los movimientos y resultados son simulados. La cámara continúa transmitiendo al pausar.</p>
+      @if (monitor.snapshot()?.simulationState; as state) {
+        <p>
+          Estabilidad del objetivo: {{ state.stableFrames }}/{{
+            state.requiredStableFrames
+          }}
+          frames.
+        </p>
+        @if (
+          monitor.snapshot()?.sourceMode === 'live' &&
+          !state.cycleActive &&
+          !monitor.canStartVirtualCycle()
+        ) {
+          <p>
+            Coloca un objeto plástico frente a la cámara; requiere confianza mínima de 0.80 y 50
+            frames estables.
+          </p>
+        }
+      }
+    </div>
+    <div class="buttons">
+      <button
+        type="button"
+        (click)="monitor.toggleSimulation()"
+        [disabled]="monitor.controlPending()"
+        [attr.aria-pressed]="monitor.paused()"
+      >
+        {{ monitor.paused() ? 'Reanudar simulación' : 'Pausar simulación' }}
+      </button>
+      @if (!monitor.isSimulation) {
+        <button
+          type="button"
+          (click)="monitor.startVirtualCycle()"
+          [disabled]="!monitor.canStartVirtualCycle()"
+        >
+          Simular un ciclo
+        </button>
+      }
+    </div>
+    @if (monitor.controlPending()) {
+      <p role="status">Actualizando el ciclo virtual…</p>
+    }
+    @if (monitor.controlError(); as error) {
+      <p class="error" role="alert">{{ error }}</p>
+    }
+  </section>
+}
