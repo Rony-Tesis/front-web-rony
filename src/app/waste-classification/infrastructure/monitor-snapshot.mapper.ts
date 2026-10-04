@@ -90,6 +90,35 @@ function operation(value: unknown): ClassificationOperation {
   };
 }
 
+function robotState(value: unknown) {
+  if (value === null) return null;
+  const source = record(value);
+  const pose = source['reportedPosition'] === null ? null : record(source['reportedPosition']);
+  return {
+    connected: boolean(source['connected']),
+    state: choice(source['state'], [
+      'connecting',
+      'idle',
+      'preparing',
+      'waiting',
+      'countdown',
+      'moving',
+      'holding',
+      'cancelled',
+      'fault',
+    ] as const),
+    stepLabel: text(source['stepLabel'], 200),
+    autoEnabled: boolean(source['autoEnabled']),
+    cycleActive: boolean(source['cycleActive']),
+    holdingObject: source['holdingObject'] === null ? null : boolean(source['holdingObject']),
+    completedGrasps: integer(source['completedGrasps']),
+    reportedPosition: pose ? { ...position(pose), z: number(pose['z'], -1e6, 1e6) } : null,
+    gripperAngle: source['gripperAngle'] === null ? null : number(source['gripperAngle'], 0, 180),
+    telemetryAt: source['telemetryAt'] === null ? null : date(source['telemetryAt']),
+    error: source['error'] === null ? null : text(source['error'], 200),
+  };
+}
+
 function simulationState(value: unknown) {
   const source = record(value);
   const requiredStableFrames = integer(source['requiredStableFrames'], 10000);
@@ -106,6 +135,11 @@ function simulationState(value: unknown) {
 /** Anti-corruption layer: unknown transport data is reconstructed before entering the application. */
 export function mapMonitorSnapshot(value: unknown): MonitorSnapshot {
   const source = record(value);
+  if (
+    source['motionMode'] === 'physical' &&
+    (source['sourceMode'] !== 'live' || !source['robotState'])
+  )
+    throw new Error('Physical motion requires live camera and robot telemetry.');
   const process = record(source['process']);
   const summary = record(source['summary']);
   const durations = list(process['stageDurationsMs'], PROCESS_STAGES.length).map((value) =>
@@ -145,13 +179,17 @@ export function mapMonitorSnapshot(value: unknown): MonitorSnapshot {
       : { sourceMode: choice(source['sourceMode'], ['simulation', 'live'] as const) }),
     ...(source['motionMode'] === undefined
       ? {}
-      : { motionMode: choice(source['motionMode'], ['simulation'] as const) }),
+      : { motionMode: choice(source['motionMode'], ['simulation', 'physical'] as const) }),
     ...(source['cameraTransport'] === undefined
       ? {}
       : { cameraTransport: choice(source['cameraTransport'], ['jpeg', 'mjpeg'] as const) }),
     ...(source['simulationState'] === undefined
       ? {}
       : { simulationState: simulationState(source['simulationState']) }),
+    ...(source['telemetryTransport'] === undefined
+      ? {}
+      : { telemetryTransport: choice(source['telemetryTransport'], ['sse'] as const) }),
+    ...(source['robotState'] === undefined ? {} : { robotState: robotState(source['robotState']) }),
     experimentalMode: choice(source['experimentalMode'], ['optimized', 'baseline']),
     updatedAt: date(source['updatedAt']),
     detection: detection(source['detection']),
