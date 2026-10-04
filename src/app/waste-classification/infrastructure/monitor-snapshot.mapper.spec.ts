@@ -66,6 +66,31 @@ describe('API anti-corruption layer', () => {
     expect(mapMonitorSnapshot(dto).sourceMode).toBeUndefined();
   });
 
+  it('validates virtual control state and stability limits', () => {
+    const dto = seed();
+    const simulationState = {
+      paused: false,
+      cycleActive: false,
+      stableFrames: 50,
+      requiredStableFrames: 50,
+    };
+    expect(mapMonitorSnapshot({ ...dto, simulationState }).simulationState).toEqual(
+      simulationState,
+    );
+    expect(() =>
+      mapMonitorSnapshot({ ...dto, simulationState: { ...simulationState, paused: 'true' } }),
+    ).toThrow();
+    expect(() =>
+      mapMonitorSnapshot({ ...dto, simulationState: { ...simulationState, stableFrames: -1 } }),
+    ).toThrow();
+    expect(() =>
+      mapMonitorSnapshot({
+        ...dto,
+        simulationState: { ...simulationState, requiredStableFrames: 0 },
+      }),
+    ).toThrow();
+  });
+
   it('supports no detection and preserves dangerous-looking text as plain data', () => {
     const dto = seed();
     expect(mapMonitorSnapshot({ ...dto, detection: null }).detection).toBeNull();
