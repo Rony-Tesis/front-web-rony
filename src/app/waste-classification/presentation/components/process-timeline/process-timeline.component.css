@@ -1,0 +1,112 @@
+dl {
+  margin: 0;
+}
+dl > div {
+  display: grid;
+  grid-template-columns: 190px 1fr;
+  border-bottom: 1px solid var(--line);
+  padding: 9px 0;
+  gap: 10px;
+}
+dl > div:last-child {
+  border-bottom: 0;
+}
+dt {
+  color: var(--muted);
+  font-size: 12px;
+}
+dd {
+  margin: 0;
+  color: var(--navy);
+  font-weight: 650;
+  font-size: 12px;
+}
+.blue {
+  color: var(--blue);
+}
+.timeline {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+li {
+  display: grid;
+  grid-template-columns: 34px 1fr 48px;
+  align-items: start;
+  gap: 12px;
+  min-height: 58px;
+  position: relative;
+}
+li:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: 16px;
+  top: 30px;
+  bottom: -1px;
+  width: 2px;
+  background: var(--line);
+}
+li.done:not(:last-child)::after {
+  background: var(--green);
+}
+.marker {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #e9eef5;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  position: relative;
+  z-index: 1;
+}
+.done .marker {
+  background: var(--green);
+}
+.current .marker {
+  background: #fff;
+  border: 3px solid var(--blue);
+}
+.current .marker::after {
+  content: '';
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--blue);
+}
+b {
+  display: block;
+  color: var(--navy);
+  font-size: 13px;
+}
+.current b {
+  color: var(--blue);
+}
+small {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  margin-top: 3px;
+}
+em {
+  color: #55709e;
+  font-size: 11px;
+  font-style: normal;
+  padding-top: 4px;
+}
+@media (max-width: 600px) {
+  dl > div {
+    grid-template-columns: 1fr;
+  }
+  li {
+    grid-template-columns: 30px minmax(0, 1fr) 42px;
+    gap: 9px;
+  }
+  .marker {
+    width: 30px;
+    height: 30px;
+  }
+  li:not(:last-child)::after {
+    left: 14px;
+  }
+}
