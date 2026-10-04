@@ -5,7 +5,7 @@
   </div>
   <div>
     <dt>Etapa actual</dt>
-    <dd>{{ snapshot().process.stageIndex + 1 }} de {{ stages.length }}</dd>
+    <dd>{{ snapshot().process.stageIndex + 1 }} de {{ stages().length }}</dd>
   </div>
   <div>
     <dt>Destino</dt>
@@ -33,7 +33,7 @@
   </div>
 </dl>
 <ol class="timeline" aria-label="Detalle de las etapas del proceso">
-  @for (stage of stages; track stage.name; let index = $index) {
+  @for (stage of stages(); track stage.name; let index = $index) {
     <li
       [class]="status(snapshot().process, index)"
       [attr.aria-current]="status(snapshot().process, index) === 'current' ? 'step' : null"
