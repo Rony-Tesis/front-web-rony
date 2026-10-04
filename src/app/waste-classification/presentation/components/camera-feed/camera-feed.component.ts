@@ -26,11 +26,19 @@ export class CameraFeedComponent {
             (item) => item.id === 'camera' && item.status === 'online',
           ))),
   );
-  protected readonly imageUrl = computed(() =>
-    this.simulation()
-      ? 'assets/detection-mock-es.png'
-      : `${apiEndpoint(this.config.apiBasePath, 'v1/monitor/frame')}?at=${encodeURIComponent(this.snapshot().updatedAt)}`,
-  );
+  protected readonly cameraLabel = computed(() => {
+    if (this.simulation()) return this.paused() ? 'SIMULACIÓN PAUSADA' : 'SIMULACIÓN EN VIVO';
+    if (this.snapshot().sourceMode === 'simulation') return 'CÁMARA SIMULADA · API';
+    return this.snapshot().cameraTransport === 'mjpeg' && !this.compact()
+      ? 'CÁMARA REAL · VIDEO'
+      : 'ÚLTIMA CAPTURA';
+  });
+  protected readonly imageUrl = computed(() => {
+    if (this.simulation()) return 'assets/detection-mock-es.png';
+    if (this.snapshot().cameraTransport === 'mjpeg' && !this.compact())
+      return apiEndpoint(this.config.apiBasePath, 'v1/monitor/stream');
+    return `${apiEndpoint(this.config.apiBasePath, 'v1/monitor/frame')}?at=${encodeURIComponent(this.snapshot().updatedAt)}`;
+  });
   protected imageFailed(): void {
     this.failedVersion.set(this.snapshot().updatedAt);
   }
