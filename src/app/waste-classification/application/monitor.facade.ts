@@ -4,7 +4,12 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { finalize } from 'rxjs';
 import { RUNTIME_CONFIG } from '../../core/config/runtime-config';
 import { apiErrorMessage } from '../../core/http/api-error';
-import { MonitorSnapshot, processLabel, SimulationAction } from '../domain/monitor.models';
+import {
+  MonitorSnapshot,
+  processLabel,
+  SimulationAction,
+  RobotAction,
+} from '../domain/monitor.models';
 import { MONITOR_REPOSITORY } from './monitor-repository';
 
 @Injectable({ providedIn: 'root' })
@@ -54,9 +59,32 @@ export class MonitorFacade {
       state.stableFrames >= state.requiredStableFrames
     );
   });
+  readonly canArmRobot = computed(() => {
+    const snapshot = this.snapshot();
+    return (
+      !!this.repository.commandRobot &&
+      !this.error() &&
+      !this.controlPending() &&
+      snapshot?.motionMode === 'physical' &&
+      snapshot.robotState?.connected === true &&
+      snapshot.robotState.state === 'idle' &&
+      snapshot.equipment.some((item) => item.id === 'camera' && item.status === 'online')
+    );
+  });
+  readonly canCancelRobot = computed(() => {
+    const state = this.snapshot()?.robotState;
+    return (
+      !!this.repository.commandRobot &&
+      !this.controlPending() &&
+      !!state &&
+      (state.autoEnabled || state.cycleActive)
+    );
+  });
   readonly stateLabel = computed(() => {
     const snapshot = this.snapshot();
     if (!snapshot) return 'En espera';
+    if (snapshot.motionMode === 'physical')
+      return snapshot.robotState?.stepLabel ?? 'Conectando con JetMax';
     if (this.paused()) return processLabel(snapshot.process, true);
     if (
       !this.isSimulation &&
@@ -95,6 +123,35 @@ export class MonitorFacade {
 
   startVirtualCycle(): void {
     if (this.canStartVirtualCycle()) this.commandVirtual('cycle');
+  }
+
+  armRobot(): void {
+    if (this.canArmRobot()) this.commandRobot('arm');
+  }
+
+  cancelRobot(): void {
+    if (this.canCancelRobot()) this.commandRobot('cancel');
+  }
+
+  private commandRobot(action: RobotAction): void {
+    if (!this.repository.commandRobot || this.controlPending()) return;
+    this.controlPendingState.set(true);
+    this.controlErrorState.set(null);
+    this.repository
+      .commandRobot(action)
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => this.controlPendingState.set(false)),
+      )
+      .subscribe({
+        next: (snapshot) => this.acceptSnapshot(snapshot),
+        error: (error: unknown) =>
+          this.controlErrorState.set(
+            error instanceof HttpErrorResponse && error.status === 409
+              ? 'El robot bloqueó el comando. Revisa HOME, pinza vacía, conexión y que no haya otro ciclo activo.'
+              : apiErrorMessage(error),
+          ),
+      });
   }
 
   private commandVirtual(action: SimulationAction): void {
