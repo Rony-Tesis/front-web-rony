@@ -1,0 +1,94 @@
+.robot-panel {
+  margin-top: 14px;
+  padding: 18px;
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.header,
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+h2 {
+  margin: 0;
+  color: var(--navy);
+  font-size: 18px;
+}
+p {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.step {
+  color: var(--blue);
+  font-weight: 700;
+}
+.badge {
+  border-radius: 20px;
+  padding: 6px 12px;
+  background: var(--green-soft);
+  color: var(--green);
+  font-size: 12px;
+  font-weight: 700;
+}
+.disconnected,
+.error {
+  color: #9f2330;
+}
+dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+dt {
+  color: var(--muted);
+  font-size: 12px;
+}
+dd {
+  margin: 5px 0 0;
+  color: var(--navy);
+  font-weight: 650;
+  font-size: 13px;
+}
+.actions {
+  justify-content: flex-start;
+}
+button {
+  border: 1px solid var(--blue);
+  border-radius: 8px;
+  padding: 10px 14px;
+  background: var(--blue);
+  color: white;
+  cursor: pointer;
+  font-weight: 650;
+}
+button.cancel {
+  border-color: #9f2330;
+  color: #9f2330;
+  background: white;
+}
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+button:focus-visible {
+  outline: 3px solid var(--blue);
+  outline-offset: 3px;
+}
+.note {
+  font-size: 12px;
+}
+@media (max-width: 600px) {
+  dl {
+    grid-template-columns: 1fr;
+  }
+  .actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
