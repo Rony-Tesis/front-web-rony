@@ -1,0 +1,59 @@
+<div class="table-wrap" [class.compact]="compact()">
+  <table>
+    <caption class="sr-only">
+      {{
+        compact() ? 'Últimas operaciones de clasificación' : 'Historial de clasificaciones'
+      }}
+    </caption>
+    <thead>
+      <tr>
+        <th scope="col">{{ compact() ? 'Hora' : 'Fecha/Hora' }}</th>
+        <th scope="col">Residuo</th>
+        @if (!compact()) {
+          <th scope="col">Categoría</th>
+          <th scope="col">Confianza</th>
+        }
+        <th scope="col">Resultado</th>
+        <th scope="col">Tiempo</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (operation of operations(); track operation.id) {
+        <tr>
+          <td>
+            {{
+              operation.completedAt
+                | date: (compact() ? 'HH:mm:ss' : 'dd/MM/yyyy HH:mm:ss') : '-0500'
+            }}
+          </td>
+          <td class="residue">
+            <span>{{ operation.residue }}</span>
+            @if (compact()) {
+              <span class="tag" [attr.data-category]="operation.category">{{
+                categories[operation.category]
+              }}</span>
+            }
+          </td>
+          @if (!compact()) {
+            <td>
+              <span class="tag" [attr.data-category]="operation.category">{{
+                categories[operation.category]
+              }}</span>
+            </td>
+            <td>{{ operation.confidence | percent: '1.0-0' }}</td>
+          }
+          <td>
+            <span class="result" [class.fail]="operation.result === 'failure'">{{
+              operation.result === 'success' ? '● Correcta' : '× Fallida'
+            }}</span>
+          </td>
+          <td>{{ operation.durationMs / 1000 | number: '1.1-1' }} s</td>
+        </tr>
+      } @empty {
+        <tr>
+          <td [attr.colspan]="compact() ? 4 : 6">No hay operaciones registradas.</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
