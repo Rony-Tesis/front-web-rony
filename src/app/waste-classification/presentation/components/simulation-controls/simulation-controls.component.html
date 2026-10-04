@@ -2,6 +2,12 @@
   <section class="controls" aria-label="Controles del ciclo virtual">
     <div>
       <h2>Ciclo virtual</h2>
+      @if (monitor.snapshot()?.detection; as detection) {
+        <p>
+          Información visible: {{ detection.residue }}. Detectar un residuo no lo convierte en un
+          objetivo apto para el ciclo.
+        </p>
+      }
       <p>Los movimientos y resultados son simulados. La cámara continúa transmitiendo al pausar.</p>
       @if (monitor.snapshot()?.simulationState; as state) {
         <p>
