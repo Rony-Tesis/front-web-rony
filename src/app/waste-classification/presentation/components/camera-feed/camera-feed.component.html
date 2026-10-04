@@ -8,7 +8,7 @@
     <img
       [src]="imageUrl()"
       [alt]="
-        simulation()
+        simulation() || snapshot().sourceMode === 'simulation'
           ? 'Simulación de detección de cartón y objetos plásticos'
           : 'Última imagen recibida de la cámara de clasificación'
       "
@@ -25,12 +25,7 @@
   @if (snapshot().detection; as detection) {
     <div class="active-object">Analizando: {{ detection.shortName }}</div>
   }
-  <div class="corner left">
-    <span class="dot"></span
-    >{{
-      simulation() ? (paused() ? 'SIMULACIÓN PAUSADA' : 'SIMULACIÓN EN VIVO') : 'ÚLTIMA CAPTURA'
-    }}
-  </div>
+  <div class="corner left"><span class="dot"></span>{{ cameraLabel() }}</div>
   <div class="corner right">{{ snapshot().updatedAt | date: 'HH:mm:ss' : '-0500' }}</div>
   @if (!compact()) {
     <div class="footer">
