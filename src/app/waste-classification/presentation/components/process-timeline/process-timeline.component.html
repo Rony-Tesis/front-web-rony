@@ -9,7 +9,7 @@
   </div>
   <div>
     <dt>Destino</dt>
-    <dd class="blue">{{ snapshot().detection?.destination ?? 'Sin destino' }}</dd>
+    <dd class="blue">{{ target()?.destination ?? 'Sin objetivo apto' }}</dd>
   </div>
   <div>
     <dt>Modo experimental</dt>
@@ -24,9 +24,8 @@
   <div>
     <dt>Posición objetivo</dt>
     <dd>
-      @if (snapshot().detection; as detection) {
-        X: {{ detection.targetMm.x | number: '1.1-1' }} mm | Y:
-        {{ detection.targetMm.y | number: '1.1-1' }} mm
+      @if (target()?.targetMm; as position) {
+        X: {{ position.x | number: '1.1-1' }} mm | Y: {{ position.y | number: '1.1-1' }} mm
       } @else {
         —
       }
