@@ -1,5 +1,5 @@
 import { DecimalPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { IconComponent } from '../../../../shared/ui/icon/icon.component';
 import { MonitorSnapshot, PROCESS_STAGES, stageStatus } from '../../../domain/monitor.models';
 
@@ -13,6 +13,11 @@ import { MonitorSnapshot, PROCESS_STAGES, stageStatus } from '../../../domain/mo
 export class ProcessTimelineComponent {
   readonly snapshot = input.required<MonitorSnapshot>();
   readonly stateLabel = input.required<string>();
+  protected readonly target = computed(() =>
+    this.snapshot().targetDetection === undefined
+      ? this.snapshot().detection
+      : this.snapshot().targetDetection,
+  );
   protected readonly stages = PROCESS_STAGES;
   protected readonly status = stageStatus;
 }
