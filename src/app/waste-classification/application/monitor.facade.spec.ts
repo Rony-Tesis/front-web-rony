@@ -137,6 +137,7 @@ describe('Shared monitor state', () => {
     };
     stream.next({ snapshot: dto, error: null });
     expect(facade.canArmRobot()).toBe(true);
+    expect(facade.canResetRobot()).toBe(true);
     expect(facade.canControlVirtual()).toBe(false);
     facade.armRobot();
     facade.armRobot();
@@ -151,6 +152,9 @@ describe('Shared monitor state', () => {
     });
     expect(facade.canArmRobot()).toBe(false);
     expect(facade.canCancelRobot()).toBe(true);
+    expect(facade.canResetRobot()).toBe(false);
+    facade.resetRobot();
+    expect(commandRobot.mock.calls).toEqual([['arm']]);
     facade.cancelRobot();
     expect(commandRobot.mock.calls.at(-1)).toEqual(['cancel']);
     stream.next({
@@ -159,6 +163,17 @@ describe('Shared monitor state', () => {
     });
     expect(facade.canArmRobot()).toBe(false);
     expect(facade.canCancelRobot()).toBe(false);
+    expect(facade.canResetRobot()).toBe(true);
+    facade.resetRobot();
+    expect(commandRobot.mock.calls.at(-1)).toEqual(['reset']);
+    stream.next({
+      snapshot: { ...dto, robotState: { ...robotState, state: 'resetting', cycleActive: true } },
+      error: null,
+    });
+    expect(facade.canArmRobot()).toBe(false);
+    expect(facade.canResetRobot()).toBe(false);
+    stream.next({ snapshot: dto, error: null });
+    expect(facade.canArmRobot()).toBe(true);
   });
 
   it('shows detected aluminum while respecting backend target eligibility', () => {
