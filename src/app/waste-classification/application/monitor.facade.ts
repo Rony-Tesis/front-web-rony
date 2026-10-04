@@ -50,6 +50,7 @@ export class MonitorFacade {
       !!state &&
       !state.cycleActive &&
       !!snapshot?.detection &&
+      state.targetReady !== false &&
       state.stableFrames >= state.requiredStableFrames
     );
   });
