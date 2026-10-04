@@ -165,9 +165,9 @@ describe('HTTP monitoring boundary', () => {
   });
 
   it('sends only named physical actions and refreshes the snapshot', () => {
-    TestBed.inject(HttpMonitorRepository).commandRobot('cancel').subscribe();
+    TestBed.inject(HttpMonitorRepository).commandRobot('reset').subscribe();
     const command = http.expectOne('/api/v1/robot/commands');
-    expect(command.request.body).toEqual({ action: 'cancel' });
+    expect(command.request.body).toEqual({ action: 'reset' });
     expect(command.request.headers.get('X-Rony-Control')).toBe('1');
     command.flush({});
     http.expectOne(endpoint).flush(new SimulationEngine(Date.now()).snapshot(Date.now()));
