@@ -1,0 +1,44 @@
+@if (detection(); as detection) {
+  <dl [class.selection]="selection()">
+    <div>
+      <dt>{{ selection() ? 'Objeto seleccionado' : 'Residuo detectado' }}</dt>
+      <dd>{{ detection.residue }}</dd>
+    </div>
+    <div>
+      <dt>Confianza YOLO</dt>
+      <dd>{{ detection.confidence | percent: '1.0-0' }}</dd>
+    </div>
+    @if (selection()) {
+      <div>
+        <dt>Categoría</dt>
+        <dd>
+          <span class="tag" [attr.data-category]="detection.category">{{
+            categories[detection.category]
+          }}</span>
+        </dd>
+      </div>
+      <div>
+        <dt>Coordenadas en imagen</dt>
+        <dd>px ({{ detection.pixel.x }}, {{ detection.pixel.y }})</dd>
+      </div>
+    } @else {
+      <div>
+        <dt>Desplazamiento estimado</dt>
+        <dd>
+          X: {{ detection.offsetMm.x | number: '1.1-1' }} mm | Y:
+          {{ detection.offsetMm.y | number: '1.1-1' }} mm
+        </dd>
+      </div>
+      <div>
+        <dt>Destino</dt>
+        <dd>{{ detection.destination }}</dd>
+      </div>
+      <div>
+        <dt>Modo experimental</dt>
+        <dd>{{ experimentalMode() === 'optimized' ? 'Con optimización' : 'Sin optimización' }}</dd>
+      </div>
+    }
+  </dl>
+} @else {
+  <p>No hay un residuo seleccionado.</p>
+}
