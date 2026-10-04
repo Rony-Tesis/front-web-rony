@@ -1,0 +1,59 @@
+# Dependencies and package-manager cache
+node_modules/
+/.npm/
+
+# Angular build output and local cache
+/dist/
+/out-tsc/
+/.angular/
+/.cache/
+*.tsbuildinfo
+
+# Tests and generated reports (keep source tests and fixtures)
+/coverage/
+/test-results/
+/playwright-report/
+/blob-report/
+/.vitest/
+
+# Logs and temporary files
+*.log
+/tmp/
+/temp/
+*.tmp
+*.swp
+*.swo
+*~
+
+# Local environment and credentials (keep documented examples)
+.env
+.env.*
+!.env.example
+!.env.*.example
+!.env.sample
+!.env.*.sample
+!.env.template
+!.env.*.template
+/.npmrc
+
+# Local editors and IDE state
+.idea/
+*.iml
+.history/
+*.code-workspace
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+
+# Local migration backups and staging
+/.migration-backup/
+/.migration/
+
+# Operating-system files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Keep package-lock.json, Angular/TypeScript configuration, src, public,
+# docs and scripts under version control. Never store secrets in them.
