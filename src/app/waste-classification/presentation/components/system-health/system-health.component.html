@@ -1,0 +1,28 @@
+<div class="grid" [class.expanded]="expanded()">
+  @for (item of equipment(); track item.id) {
+    <article [attr.data-status]="item.status">
+      <div class="icon"><app-icon [name]="icons[item.id]" /></div>
+      <div>
+        <b>{{ labels[item.id] }}</b
+        ><strong><i></i>{{ label(item.id, item.status) }}</strong>
+        @if (expanded()) {
+          <small>{{
+            simulation() ? 'Estado simulado del componente.' : 'Estado reportado por el sistema.'
+          }}</small>
+        }
+      </div>
+    </article>
+  }
+  @if (expanded()) {
+    <article>
+      <div class="icon"><app-icon name="clock" /></div>
+      <div>
+        <b>Última actualización</b
+        ><strong>{{ snapshot().updatedAt | date: 'HH:mm:ss' : '-0500' }}</strong
+        ><small>{{
+          simulation() ? 'Datos de la simulación.' : 'Últimos datos recibidos de la API.'
+        }}</small>
+      </div>
+    </article>
+  }
+</div>
