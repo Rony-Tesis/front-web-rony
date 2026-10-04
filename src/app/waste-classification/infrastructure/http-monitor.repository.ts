@@ -1,6 +1,8 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import {
+  Observable,
+  concat,
   catchError,
   defer,
   exhaustMap,
@@ -14,8 +16,8 @@ import {
 } from 'rxjs';
 import { apiEndpoint, RUNTIME_CONFIG } from '../../core/config/runtime-config';
 import { apiErrorMessage } from '../../core/http/api-error';
-import { SimulationAction } from '../domain/monitor.models';
-import { MonitorRepository } from '../application/monitor-repository';
+import { SimulationAction, RobotAction } from '../domain/monitor.models';
+import { MonitorRepository, MonitorUpdate } from '../application/monitor-repository';
 import { mapMonitorSnapshot } from './monitor-snapshot.mapper';
 
 @Injectable({ providedIn: 'root' })
@@ -24,7 +26,7 @@ export class HttpMonitorRepository implements MonitorRepository {
   private readonly config = inject(RUNTIME_CONFIG);
   private readonly endpoint = apiEndpoint(this.config.apiBasePath, 'v1/monitor/snapshot');
 
-  watch() {
+  watch(): Observable<MonitorUpdate> {
     return defer(() => {
       let nextAttemptAt = 0;
       let failures = 0;
@@ -59,16 +61,63 @@ export class HttpMonitorRepository implements MonitorRepository {
             }),
           ),
         ),
-        takeWhile((update) => !update.terminal, true),
-        map(({ snapshot, error }) => ({ snapshot, error })),
+        takeWhile(
+          (update) => !update.terminal && update.snapshot?.telemetryTransport !== 'sse',
+          true,
+        ),
+        switchMap(({ snapshot, error }) =>
+          snapshot?.telemetryTransport === 'sse'
+            ? concat(of({ snapshot, error }), this.events())
+            : of({ snapshot, error }),
+        ),
       );
     });
   }
 
+  private events(): Observable<MonitorUpdate> {
+    return new Observable<MonitorUpdate>((subscriber) => {
+      const source = new EventSource(apiEndpoint(this.config.apiBasePath, 'v1/monitor/events'), {
+        withCredentials: true,
+      });
+      source.onmessage = (event) => {
+        try {
+          subscriber.next({ snapshot: mapMonitorSnapshot(JSON.parse(event.data)), error: null });
+        } catch {
+          subscriber.error(new Error('Invalid telemetry'));
+        }
+      };
+      source.onerror = () => {
+        subscriber.next({
+          snapshot: null,
+          error: 'Telemetría sin conexión; reconectando con el backend.',
+        });
+        if (source.readyState === EventSource.CLOSED)
+          subscriber.error(new Error('Telemetry closed'));
+      };
+      return () => source.close();
+    }).pipe(
+      timeout({ each: 4000 }),
+      catchError(() =>
+        concat(
+          of({ snapshot: null, error: 'Telemetría no disponible; reconectando con el backend.' }),
+          timer(2000).pipe(switchMap(() => this.watch())),
+        ),
+      ),
+    );
+  }
+
+  commandRobot(action: RobotAction) {
+    return this.command('v1/robot/commands', action);
+  }
+
   commandSimulation(action: SimulationAction) {
+    return this.command('v1/simulation/commands', action);
+  }
+
+  private command(path: string, action: SimulationAction | RobotAction) {
     return this.http
       .post<unknown>(
-        apiEndpoint(this.config.apiBasePath, 'v1/simulation/commands'),
+        apiEndpoint(this.config.apiBasePath, path),
         { action },
         { withCredentials: true, headers: { 'X-Rony-Control': '1' } },
       )
@@ -79,6 +128,5 @@ export class HttpMonitorRepository implements MonitorRepository {
       );
   }
 
-  // Physical robot commands are not part of this repository.
   setSimulationPaused(_paused: boolean): void {}
 }
