@@ -1,0 +1,66 @@
+<section aria-labelledby="classifications-title">
+  <div class="title">
+    <h1 id="classifications-title">Clasificaciones</h1>
+    <p>Historial de operaciones y resultados de clasificación.</p>
+  </div>
+  @if (monitor.snapshot(); as snapshot) {
+    <div class="metrics">
+      <app-metric-card
+        label="Total de operaciones"
+        [value]="snapshot.summary.total"
+        detail="Registros en el período"
+        icon="doc"
+        [summary]="true"
+      />
+      <app-metric-card
+        label="Clasificaciones correctas"
+        [value]="snapshot.summary.successful"
+        [detail]="
+          (percentage(snapshot.summary.successful, snapshot.summary.total) | number: '1.1-1') +
+          '% del total'
+        "
+        tone="success"
+        icon="check"
+        [summary]="true"
+      />
+      <app-metric-card
+        label="Clasificaciones fallidas"
+        [value]="snapshot.summary.failed"
+        [detail]="
+          (percentage(snapshot.summary.failed, snapshot.summary.total) | number: '1.1-1') +
+          '% del total'
+        "
+        tone="danger"
+        icon="doc"
+        [summary]="true"
+      />
+      <app-metric-card
+        label="Tiempo promedio"
+        [value]="(snapshot.summary.averageDurationMs / 1000 | number: '1.1-1') + ' s'"
+        detail="Por operación"
+        icon="clock"
+        [summary]="true"
+      />
+    </div>
+    <article class="panel history">
+      <header>
+        <div class="icon"><app-icon name="doc" /></div>
+        <div>
+          <h2>Historial de clasificaciones</h2>
+          <p>Últimas operaciones de clasificación realizadas.</p>
+        </div>
+      </header>
+      <app-operation-table [operations]="snapshot.operations" />
+    </article>
+    <article class="panel">
+      <header>
+        <div class="icon"><app-icon name="settings" /></div>
+        <div>
+          <h2>Estado del sistema</h2>
+          <p>Estado actual de los principales componentes del sistema.</p>
+        </div>
+      </header>
+      <app-system-health [snapshot]="snapshot" />
+    </article>
+  }
+</section>
