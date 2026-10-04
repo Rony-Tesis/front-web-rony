@@ -56,6 +56,9 @@ export interface EquipmentHealth {
 
 /** A coherent read model of the classification bounded context. */
 export interface MonitorSnapshot {
+  readonly sourceMode?: 'simulation' | 'live';
+  readonly motionMode?: 'simulation';
+  readonly cameraTransport?: 'jpeg' | 'mjpeg';
   readonly experimentalMode: 'optimized' | 'baseline';
   readonly updatedAt: string;
   readonly detection: Detection | null;
