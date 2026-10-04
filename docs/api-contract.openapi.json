@@ -281,6 +281,52 @@
           }
         }
       }
+    },
+    "/v1/simulation/commands": {
+      "post": {
+        "operationId": "commandVirtualCycle",
+        "summary": "Control virtual cycles only; never physical motion",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Rony-Control",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": ["1"]
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["action"],
+                "additionalProperties": false,
+                "properties": {
+                  "action": {
+                    "type": "string",
+                    "enum": ["pause", "resume", "cycle"]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Virtual control accepted; refresh snapshot."
+          },
+          "403": {
+            "description": "Origin or authorization rejected."
+          },
+          "409": {
+            "description": "Cycle active or no stable plastic target."
+          }
+        }
+      }
     }
   },
   "components": {
@@ -581,9 +627,33 @@
             "type": "string",
             "enum": ["jpeg", "mjpeg"],
             "description": "Optional transport advertised by the backend; default JPEG."
+          },
+          "simulationState": {
+            "$ref": "#/components/schemas/SimulationState"
           }
         },
         "additionalProperties": false
+      },
+      "SimulationState": {
+        "type": "object",
+        "required": ["paused", "cycleActive", "stableFrames", "requiredStableFrames"],
+        "properties": {
+          "paused": {
+            "type": "boolean"
+          },
+          "cycleActive": {
+            "type": "boolean"
+          },
+          "stableFrames": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "requiredStableFrames": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10000
+          }
+        }
       }
     },
     "securitySchemes": {
