@@ -9,11 +9,13 @@
             ? 'API sin conexión'
             : monitor.snapshot()?.sourceMode === 'simulation'
               ? 'Cámara simulada · brazo virtual'
-              : monitor.snapshot()?.motionMode === 'simulation'
-                ? 'Cámara real · brazo virtual'
-                : monitor.online()
-                  ? 'Sistema en línea'
-                  : 'Sistema sin conexión'
+              : monitor.snapshot()?.motionMode === 'physical'
+                ? 'Cámara real · JetMax físico'
+                : monitor.snapshot()?.motionMode === 'simulation'
+                  ? 'Cámara real · brazo virtual'
+                  : monitor.online()
+                    ? 'Sistema en línea'
+                    : 'Sistema sin conexión'
       }}</span
     >
     <span class="divider"></span>
