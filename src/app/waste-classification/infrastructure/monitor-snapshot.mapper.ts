@@ -127,6 +127,15 @@ export function mapMonitorSnapshot(value: unknown): MonitorSnapshot {
   if (completed && (progressPercent !== 100 || lastResult === null || gripperClosed))
     throw new Error('Inconsistent completed cycle.');
   return {
+    ...(source['sourceMode'] === undefined
+      ? {}
+      : { sourceMode: choice(source['sourceMode'], ['simulation', 'live'] as const) }),
+    ...(source['motionMode'] === undefined
+      ? {}
+      : { motionMode: choice(source['motionMode'], ['simulation'] as const) }),
+    ...(source['cameraTransport'] === undefined
+      ? {}
+      : { cameraTransport: choice(source['cameraTransport'], ['jpeg', 'mjpeg'] as const) }),
     experimentalMode: choice(source['experimentalMode'], ['optimized', 'baseline']),
     updatedAt: date(source['updatedAt']),
     detection: detection(source['detection']),
