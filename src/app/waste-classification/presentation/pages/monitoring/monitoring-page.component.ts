@@ -4,6 +4,7 @@ import { MonitorFacade } from '../../../application/monitor.facade';
 import { CameraFeedComponent } from '../../components/camera-feed/camera-feed.component';
 import { DetectionDetailsComponent } from '../../components/detection-details/detection-details.component';
 import { ProcessTimelineComponent } from '../../components/process-timeline/process-timeline.component';
+import { SimulationControlsComponent } from '../../components/simulation-controls/simulation-controls.component';
 import { SystemHealthComponent } from '../../components/system-health/system-health.component';
 
 @Component({
@@ -14,6 +15,7 @@ import { SystemHealthComponent } from '../../components/system-health/system-hea
     DetectionDetailsComponent,
     ProcessTimelineComponent,
     SystemHealthComponent,
+    SimulationControlsComponent,
   ],
   templateUrl: './monitoring-page.component.html',
   styleUrl: './monitoring-page.component.css',
