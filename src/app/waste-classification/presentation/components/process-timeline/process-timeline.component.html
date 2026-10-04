@@ -1,0 +1,62 @@
+<dl>
+  <div>
+    <dt>Estado actual</dt>
+    <dd class="blue">{{ stateLabel() }}</dd>
+  </div>
+  <div>
+    <dt>Etapa actual</dt>
+    <dd>{{ snapshot().process.stageIndex + 1 }} de {{ stages.length }}</dd>
+  </div>
+  <div>
+    <dt>Destino</dt>
+    <dd class="blue">{{ snapshot().detection?.destination ?? 'Sin destino' }}</dd>
+  </div>
+  <div>
+    <dt>Modo experimental</dt>
+    <dd class="blue">
+      {{ snapshot().experimentalMode === 'optimized' ? 'Con optimización' : 'Sin optimización' }}
+    </dd>
+  </div>
+  <div>
+    <dt>Tiempo transcurrido del ciclo</dt>
+    <dd>{{ snapshot().process.elapsedMs / 1000 | number: '1.1-1' }} s</dd>
+  </div>
+  <div>
+    <dt>Posición objetivo</dt>
+    <dd>
+      @if (snapshot().detection; as detection) {
+        X: {{ detection.targetMm.x | number: '1.1-1' }} mm | Y:
+        {{ detection.targetMm.y | number: '1.1-1' }} mm
+      } @else {
+        —
+      }
+    </dd>
+  </div>
+</dl>
+<ol class="timeline" aria-label="Detalle de las etapas del proceso">
+  @for (stage of stages; track stage.name; let index = $index) {
+    <li
+      [class]="status(snapshot().process, index)"
+      [attr.aria-current]="status(snapshot().process, index) === 'current' ? 'step' : null"
+    >
+      <span class="marker">
+        @if (status(snapshot().process, index) === 'done') {
+          <app-icon name="check" />
+        }
+      </span>
+      <div>
+        <b>{{ stage.name }}</b
+        ><small>{{ stage.description }}</small>
+      </div>
+      <em>
+        @if (status(snapshot().process, index) === 'done') {
+          {{ (snapshot().process.stageDurationsMs[index] ?? 0) / 1000 | number: '1.1-1' }} s
+        } @else if (status(snapshot().process, index) === 'current') {
+          {{ snapshot().process.stageElapsedMs / 1000 | number: '1.1-1' }} s
+        } @else {
+          —
+        }
+      </em>
+    </li>
+  }
+</ol>
