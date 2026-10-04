@@ -91,6 +91,40 @@ describe('API anti-corruption layer', () => {
     ).toThrow();
   });
 
+  it('keeps visible low-confidence aluminum separate from an eligible cycle target', () => {
+    const dto = seed();
+    const snapshot = mapMonitorSnapshot({
+      ...dto,
+      detection: {
+        ...dto.detection,
+        category: 'aluminum',
+        confidence: 0.38,
+        offsetMm: null,
+        targetMm: null,
+      },
+      targetDetection: null,
+      simulationState: {
+        paused: false,
+        cycleActive: false,
+        stableFrames: 0,
+        requiredStableFrames: 50,
+        targetReady: false,
+      },
+    });
+    expect(snapshot.detection?.category).toBe('aluminum');
+    expect(snapshot.detection?.confidence).toBe(0.38);
+    expect(snapshot.detection?.targetMm).toBeNull();
+    expect(snapshot.targetDetection).toBeNull();
+    expect(snapshot.simulationState?.targetReady).toBe(false);
+    expect(() => mapMonitorSnapshot({ ...dto, targetDetection: {} })).toThrow();
+    expect(() =>
+      mapMonitorSnapshot({
+        ...snapshot,
+        simulationState: { ...snapshot.simulationState, targetReady: 'yes' },
+      }),
+    ).toThrow();
+  });
+
   it('supports no detection and preserves dangerous-looking text as plain data', () => {
     const dto = seed();
     expect(mapMonitorSnapshot({ ...dto, detection: null }).detection).toBeNull();
