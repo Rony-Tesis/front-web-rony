@@ -5,9 +5,15 @@
       >{{
         monitor.isSimulation
           ? 'Modo simulación'
-          : monitor.online()
-            ? 'Sistema en línea'
-            : 'Sistema sin conexión'
+          : monitor.error()
+            ? 'API sin conexión'
+            : monitor.snapshot()?.sourceMode === 'simulation'
+              ? 'Cámara simulada · brazo virtual'
+              : monitor.snapshot()?.motionMode === 'simulation'
+                ? 'Cámara real · brazo virtual'
+                : monitor.online()
+                  ? 'Sistema en línea'
+                  : 'Sistema sin conexión'
       }}</span
     >
     <span class="divider"></span>
