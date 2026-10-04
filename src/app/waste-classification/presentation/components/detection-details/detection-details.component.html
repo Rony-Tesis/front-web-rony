@@ -1,7 +1,7 @@
 @if (detection(); as detection) {
   <dl [class.selection]="selection()">
     <div>
-      <dt>{{ selection() ? 'Objeto seleccionado' : 'Residuo detectado' }}</dt>
+      <dt>{{ selection() ? 'Objeto detectado' : 'Residuo detectado' }}</dt>
       <dd>{{ detection.residue }}</dd>
     </div>
     <div>
@@ -19,14 +19,19 @@
       </div>
       <div>
         <dt>Coordenadas en imagen</dt>
-        <dd>px ({{ detection.pixel.x }}, {{ detection.pixel.y }})</dd>
+        <dd>
+          px ({{ detection.pixel.x | number: '1.0-1' }}, {{ detection.pixel.y | number: '1.0-1' }})
+        </dd>
       </div>
     } @else {
       <div>
         <dt>Desplazamiento estimado</dt>
         <dd>
-          X: {{ detection.offsetMm.x | number: '1.1-1' }} mm | Y:
-          {{ detection.offsetMm.y | number: '1.1-1' }} mm
+          @if (detection.offsetMm; as offset) {
+            X: {{ offset.x | number: '1.1-1' }} mm | Y: {{ offset.y | number: '1.1-1' }} mm
+          } @else {
+            Proyección no disponible
+          }
         </dd>
       </div>
       <div>
@@ -40,5 +45,5 @@
     }
   </dl>
 } @else {
-  <p>No hay un residuo seleccionado.</p>
+  <p>No hay un residuo detectado.</p>
 }
