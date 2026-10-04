@@ -1,0 +1,51 @@
+<div
+  class="feed"
+  [class.compact]="compact()"
+  [class.paused]="paused()"
+  [class.simulated]="simulation()"
+>
+  @if (available()) {
+    <img
+      [src]="imageUrl()"
+      [alt]="
+        simulation()
+          ? 'Simulación de detección de cartón y objetos plásticos'
+          : 'Última imagen recibida de la cámara de clasificación'
+      "
+      (error)="imageFailed()"
+    />
+    <div class="shade"></div>
+    @if (simulation()) {
+      <div class="scan-line"></div>
+      <div class="plastic-label">plástico 0.88</div>
+    }
+  } @else {
+    <p class="placeholder">Imagen de cámara no disponible.</p>
+  }
+  @if (snapshot().detection; as detection) {
+    <div class="active-object">Analizando: {{ detection.shortName }}</div>
+  }
+  <div class="corner left">
+    <span class="dot"></span
+    >{{
+      simulation() ? (paused() ? 'SIMULACIÓN PAUSADA' : 'SIMULACIÓN EN VIVO') : 'ÚLTIMA CAPTURA'
+    }}
+  </div>
+  <div class="corner right">{{ snapshot().updatedAt | date: 'HH:mm:ss' : '-0500' }}</div>
+  @if (!compact()) {
+    <div class="footer">
+      <span>CÁMARA 01 · CLASIFICACIÓN</span
+      ><span>{{ snapshot().framesPerSecond | number: '1.1-1' }} FPS</span>
+    </div>
+    <div
+      class="progress"
+      role="progressbar"
+      aria-label="Progreso del ciclo"
+      aria-valuemin="0"
+      aria-valuemax="100"
+      [attr.aria-valuenow]="snapshot().process.progressPercent"
+    >
+      <span [style.width.%]="snapshot().process.progressPercent"></span>
+    </div>
+  }
+</div>
