@@ -49,6 +49,23 @@ describe('API anti-corruption layer', () => {
     ).toThrow();
   });
 
+  it('validates camera provenance and transport without requiring prototype metadata', () => {
+    const dto = seed();
+    const snapshot = mapMonitorSnapshot({
+      ...dto,
+      sourceMode: 'live',
+      motionMode: 'simulation',
+      cameraTransport: 'mjpeg',
+    });
+    expect(snapshot.sourceMode).toBe('live');
+    expect(snapshot.motionMode).toBe('simulation');
+    expect(snapshot.cameraTransport).toBe('mjpeg');
+    expect(() => mapMonitorSnapshot({ ...dto, sourceMode: 'unexpected' })).toThrow();
+    expect(() => mapMonitorSnapshot({ ...dto, motionMode: 'physical' })).toThrow();
+    expect(() => mapMonitorSnapshot({ ...dto, cameraTransport: 'javascript:' })).toThrow();
+    expect(mapMonitorSnapshot(dto).sourceMode).toBeUndefined();
+  });
+
   it('supports no detection and preserves dangerous-looking text as plain data', () => {
     const dto = seed();
     expect(mapMonitorSnapshot({ ...dto, detection: null }).detection).toBeNull();
