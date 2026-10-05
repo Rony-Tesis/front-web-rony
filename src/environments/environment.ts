@@ -1,5 +1,5 @@
 export const environment = {
-  dataSource: 'simulation',
+  dataSource: 'api',
   apiBasePath: '/api',
   pollingIntervalMs: 2000,
   requestTimeoutMs: 10000,
