@@ -18,7 +18,7 @@
       </tr>
     </thead>
     <tbody>
-      @for (operation of operations(); track operation.id) {
+      @for (operation of visibleOperations(); track operation.id) {
         <tr>
           <td>
             {{
@@ -57,3 +57,23 @@
     </tbody>
   </table>
 </div>
+@if (!compact() && operations().length > 0) {
+  <nav class="pagination" aria-label="Paginación del historial de clasificaciones">
+    <p class="pagination-summary" role="status" aria-live="polite" aria-atomic="true">
+      Mostrando {{ firstRecord() }}–{{ lastRecord() }} de {{ operations().length }} registros
+    </p>
+    <div class="pagination-controls">
+      <button type="button" (click)="previousPage()" [disabled]="currentPage() === 1">
+        Anterior
+      </button>
+      <span>Página {{ currentPage() }} de {{ totalPages() }}</span>
+      <button
+        type="button"
+        (click)="nextPage()"
+        [disabled]="currentPage() === totalPages()"
+      >
+        Siguiente
+      </button>
+    </div>
+  </nav>
+}
