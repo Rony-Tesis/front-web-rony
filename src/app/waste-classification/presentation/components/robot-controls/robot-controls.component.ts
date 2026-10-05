@@ -1,5 +1,5 @@
 import { DecimalPipe, DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { MonitorFacade } from '../../../application/monitor.facade';
 
 @Component({
@@ -11,4 +11,9 @@ import { MonitorFacade } from '../../../application/monitor.facade';
 })
 export class RobotControlsComponent {
   protected readonly monitor = inject(MonitorFacade);
+  protected readonly controlsVisible = signal(true);
+
+  protected toggleControls(): void {
+    this.controlsVisible.update((visible) => !visible);
+  }
 }
