@@ -98,3 +98,22 @@ button.reset {
   color: var(--blue);
   background: var(--blue-soft);
 }
+
+.visibility-control {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 10px;
+}
+button.visibility-toggle {
+  padding: 6px 10px;
+  border-color: var(--line);
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 500;
+}
+button.visibility-toggle:hover {
+  border-color: var(--blue);
+  background: var(--blue-soft);
+  color: var(--blue);
+}
