@@ -8,12 +8,10 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "start:api": "ng serve --configuration api --proxy-config proxy.conf.json",
-    "build:demo": "ng build --configuration demo",
     "test:ci": "ng test --watch=false",
     "check:architecture": "node scripts/check-architecture.cjs",
     "format": "prettier --write \"src/**/*.{ts,html,css}\" \"docs/**/*.json\" \"*.{json,md}\"",
-    "format:check": "prettier --check \"src/**/*.{ts,html,css}\" \"docs/**/*.json\" \"*.{json,md}\"",
-    "start:demo": "ng serve"
+    "format:check": "prettier --check \"src/**/*.{ts,html,css}\" \"docs/**/*.json\" \"*.{json,md}\""
   },
   "private": true,
   "packageManager": "npm@11.11.0",
