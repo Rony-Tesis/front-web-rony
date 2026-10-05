@@ -7,8 +7,8 @@
 Primera terminal PowerShell:
 
 ```powershell
-cd C:\Users\PC\Desktop\Tesis\Backend-Rony-Pruebas
-.\run-physical.ps1
+cd C:\Users\PC\Desktop\Tesis\Back-Rony\back-rony
+.\run.ps1 -Mode Physical
 ```
 
 Segunda terminal:
@@ -22,21 +22,16 @@ Abre http://127.0.0.1:4200/monitoring. Debe indicar **Cámara real · JetMax fí
 
 La cámara MJPEG continúa durante los movimientos y el backend publica SSE a 10 Hz. Monitoreo muestra cada paso, XYZ y ángulo de pinza reportados por ROS. Estos valores son el estado del controlador, no mediciones de encoders. Comprueba el agarre en el video. **Cancelar siguientes movimientos** permite terminar el tramo ya enviado; no es una parada de emergencia física. Para otra prueba pulsa **Resetear · HOME y abrir pinza** con el recorrido despejado y una superficie preparada para recibir el objeto. El reset vuelve a HOME, abre a 0° y limpia el ciclo; luego pulsa **Activar funcionamiento**. No necesitas reiniciar el backend. Durante un movimiento primero cancela y espera que termine el tramo.
 
-Las dependencias ya están instaladas en este PC. El [README del backend](../Backend-Rony-Pruebas/README.md) contiene límites, credenciales y funcionamiento completo. No ejecutes el notebook ni otro controlador al mismo tiempo.
+Las dependencias ya están instaladas en este PC. El [README del backend](../Back-Rony/back-rony/README.md) contiene límites, credenciales y funcionamiento completo. No ejecutes el notebook ni otro controlador al mismo tiempo.
 
-## Otros modos
+## Fuente de datos
 
-- `run-live.ps1` en el backend: cámara real y ciclos virtuales.
-- `run.ps1` en el backend: video y ciclos simulados.
-- `npm run start:demo` en Angular: demo estática local sin backend.
-
-Detén el backend anterior con Ctrl+C antes de cambiar de modo. `npm start` siempre consume la API del puerto 8000.
+`npm start` y `ng serve` consumen la API Spring del puerto 8000 a través del proxy. Si la API o el hardware no están disponibles, se muestra el estado de desconexión; no se cambia al mock local. Spring arranca en modo físico por defecto y no guarda ciclos virtuales en MySQL. Los agarres físicos se registran aparte de las clasificaciones con depósito confirmado.
 
 ## Verificación
 
 ```sh
 npm run build
-npm run build:demo
 npm run test:ci
 npm run check:architecture
 npm run format:check
