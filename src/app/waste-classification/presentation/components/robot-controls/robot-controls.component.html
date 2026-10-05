@@ -1,112 +1,125 @@
 @let snapshot = monitor.snapshot();
 @let robot = snapshot?.motionMode === 'physical' ? snapshot?.robotState : undefined;
-<section class="robot-panel" aria-labelledby="robot-control-title">
-  <div class="header">
-    <div>
-      <h2 id="robot-control-title">JetMax · movimiento físico automático</h2>
-      <p>Preparar → detectar → agarrar → levantar → volver a HOME con la pinza cerrada.</p>
+<div class="visibility-control">
+  <button
+    class="visibility-toggle"
+    type="button"
+    aria-controls="jetmax-controls"
+    [attr.aria-expanded]="controlsVisible()"
+    (click)="toggleControls()"
+  >
+    {{ controlsVisible() ? 'Ocultar controles del JetMax' : 'Mostrar controles del JetMax' }}
+  </button>
+</div>
+@if (controlsVisible()) {
+  <section id="jetmax-controls" class="robot-panel" aria-labelledby="robot-control-title">
+    <div class="header">
+      <div>
+        <h2 id="robot-control-title">JetMax · movimiento físico automático</h2>
+        <p>Preparar → detectar → agarrar → levantar → volver a HOME con la pinza cerrada.</p>
+      </div>
+      <span class="badge" [class.disconnected]="!robot?.connected">{{
+        robot?.connected ? 'ROS conectado' : 'ROS sin conexión'
+      }}</span>
     </div>
-    <span class="badge" [class.disconnected]="!robot?.connected">{{
-      robot?.connected ? 'ROS conectado' : 'ROS sin conexión'
-    }}</span>
-  </div>
-  <p class="step" role="status">
-    {{
-      robot?.stepLabel ??
-        (monitor.isSimulation
-          ? 'Simulación local. Los controles físicos están deshabilitados.'
-          : snapshot?.motionMode === 'simulation'
-            ? 'Backend en simulación. Los controles físicos están deshabilitados.'
-            : monitor.error()
-              ? 'Sin conexión con el backend. Los controles físicos están deshabilitados.'
-              : 'Esperando telemetría del JetMax. Los controles físicos están deshabilitados.')
-    }}
-  </p>
-  @if (robot) {
-    <dl>
-      <div>
-        <dt>Posición reportada por ROS</dt>
-        <dd>
-          @if (robot.reportedPosition; as pose) {
-            X: {{ pose.x | number: '1.1-1' }} · Y: {{ pose.y | number: '1.1-1' }} · Z:
-            {{ pose.z | number: '1.1-1' }} mm
-          } @else {
-            —
-          }
-        </dd>
-      </div>
-      <div>
-        <dt>Pinza reportada</dt>
-        <dd>
-          {{ robot.gripperAngle === null ? '—' : (robot.gripperAngle | number: '1.0-0') + '°' }}
-        </dd>
-      </div>
-      <div>
-        <dt>Última telemetría</dt>
-        <dd>
-          {{ robot.telemetryAt ? (robot.telemetryAt | date: 'HH:mm:ss.SSS' : '-0500') : '—' }}
-        </dd>
-      </div>
-      <div>
-        <dt>Ciclos de agarre ejecutados</dt>
-        <dd>{{ robot.completedGrasps }}</dd>
-      </div>
-    </dl>
-    @if (robot.state === 'idle') {
-      <p>
-        Activa con la pinza vacía, calibración vigente y recorrido despejado. Se abrirá la pinza y
-        esperará plástico con confianza ≥0.80 y 50 frames estables.
-      </p>
+    <p class="step" role="status">
+      {{
+        robot?.stepLabel ??
+          (monitor.isSimulation
+            ? 'Simulación local. Los controles físicos están deshabilitados.'
+            : snapshot?.motionMode === 'simulation'
+              ? 'Backend en simulación. Los controles físicos están deshabilitados.'
+              : monitor.error()
+                ? 'Sin conexión con el backend. Los controles físicos están deshabilitados.'
+                : 'Esperando telemetría del JetMax. Los controles físicos están deshabilitados.')
+      }}
+    </p>
+    @if (robot) {
+      <dl>
+        <div>
+          <dt>Posición reportada por ROS</dt>
+          <dd>
+            @if (robot.reportedPosition; as pose) {
+              X: {{ pose.x | number: '1.1-1' }} · Y: {{ pose.y | number: '1.1-1' }} · Z:
+              {{ pose.z | number: '1.1-1' }} mm
+            } @else {
+              —
+            }
+          </dd>
+        </div>
+        <div>
+          <dt>Pinza reportada</dt>
+          <dd>
+            {{ robot.gripperAngle === null ? '—' : (robot.gripperAngle | number: '1.0-0') + '°' }}
+          </dd>
+        </div>
+        <div>
+          <dt>Última telemetría</dt>
+          <dd>
+            {{ robot.telemetryAt ? (robot.telemetryAt | date: 'HH:mm:ss.SSS' : '-0500') : '—' }}
+          </dd>
+        </div>
+        <div>
+          <dt>Ciclos de agarre ejecutados</dt>
+          <dd>{{ robot.completedGrasps }}</dd>
+        </div>
+      </dl>
+      @if (robot.state === 'idle') {
+        <p>
+          Activa con la pinza vacía, calibración vigente y recorrido despejado. Se abrirá la pinza y
+          esperará plástico con confianza ≥0.80 y 50 frames estables.
+        </p>
+      }
+      @if (robot.state === 'waiting' || robot.state === 'countdown') {
+        <p>
+          Estabilidad: {{ monitor.snapshot()?.simulationState?.stableFrames ?? 0 }} / 50 frames.
+        </p>
+      }
+      @if (robot.state === 'resetting') {
+        <p>
+          Reseteando el brazo. Espera que llegue a HOME y abra la pinza antes de activar otra
+          prueba.
+        </p>
+      }
+      @if (robot.state === 'holding') {
+        <p>
+          La pinza se conserva cerrada en HOME. Comprueba el agarre en la cámara. No se soltará ni
+          comenzará otro ciclo automáticamente.
+        </p>
+      }
     }
-    @if (robot.state === 'waiting' || robot.state === 'countdown') {
-      <p>
-        Estabilidad: {{ monitor.snapshot()?.simulationState?.stableFrames ?? 0 }} / 50 frames.
-      </p>
+    <div class="actions">
+      <button type="button" (click)="monitor.armRobot()" [disabled]="!monitor.canArmRobot()">
+        Activar funcionamiento
+      </button>
+      <button
+        class="reset"
+        type="button"
+        (click)="monitor.resetRobot()"
+        [disabled]="!monitor.canResetRobot()"
+      >
+        Resetear · HOME y abrir pinza
+      </button>
+      <button
+        class="cancel"
+        type="button"
+        (click)="monitor.cancelRobot()"
+        [disabled]="!monitor.canCancelRobot()"
+      >
+        Cancelar siguientes movimientos
+      </button>
+    </div>
+    <p class="note">
+      Cancelar permite terminar el tramo ya enviado y bloquea los siguientes; no es una parada de
+      emergencia. Resetear vuelve a HOME y abre la pinza: puede soltar el objeto. Prepara una
+      superficie de recepción y despeja el recorrido antes de pulsarlo. Después podrás activar
+      otra prueba sin reiniciar el backend.
+    </p>
+    @if (robot?.error) {
+      <p class="error" role="alert">{{ robot?.error }}</p>
     }
-    @if (robot.state === 'resetting') {
-      <p>
-        Reseteando el brazo. Espera que llegue a HOME y abra la pinza antes de activar otra
-        prueba.
-      </p>
+    @if (monitor.controlError()) {
+      <p class="error" role="alert">{{ monitor.controlError() }}</p>
     }
-    @if (robot.state === 'holding') {
-      <p>
-        La pinza se conserva cerrada en HOME. Comprueba el agarre en la cámara. No se soltará ni
-        comenzará otro ciclo automáticamente.
-      </p>
-    }
-  }
-  <div class="actions">
-    <button type="button" (click)="monitor.armRobot()" [disabled]="!monitor.canArmRobot()">
-      Activar funcionamiento
-    </button>
-    <button
-      class="reset"
-      type="button"
-      (click)="monitor.resetRobot()"
-      [disabled]="!monitor.canResetRobot()"
-    >
-      Resetear · HOME y abrir pinza
-    </button>
-    <button
-      class="cancel"
-      type="button"
-      (click)="monitor.cancelRobot()"
-      [disabled]="!monitor.canCancelRobot()"
-    >
-      Cancelar siguientes movimientos
-    </button>
-  </div>
-  <p class="note">
-    Cancelar permite terminar el tramo ya enviado y bloquea los siguientes; no es una parada de
-    emergencia. Resetear vuelve a HOME y abre la pinza: puede soltar el objeto. Prepara una
-    superficie de recepción y despeja el recorrido antes de pulsarlo. Después podrás activar
-    otra prueba sin reiniciar el backend.
-  </p>
-  @if (robot?.error) {
-    <p class="error" role="alert">{{ robot?.error }}</p>
-  }
-  @if (monitor.controlError()) {
-    <p class="error" role="alert">{{ monitor.controlError() }}</p>
-  }
-</section>
+  </section>
+}
