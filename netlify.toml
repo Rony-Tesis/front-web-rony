@@ -1,0 +1,13 @@
+[build]
+  command = "npm run build"
+  publish = "dist/Web-Angular/browser"
+
+[build.environment]
+  NODE_VERSION = "24"
+
+# Add the /api proxy to the real Render backend before this SPA fallback
+# once that backend has been deployed. Never put private tokens in this file.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

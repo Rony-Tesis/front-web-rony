@@ -4,6 +4,12 @@ Interfaz para cámara, detección, trayectoria continua, tres destinos provision
 
 La arquitectura final ejecuta YOLO, selección, planificación y ROS dentro del JetMax; Angular/Spring/MySQL se despliegan en un servidor HTTPS. El brazo inicia el intercambio con esa API. El navegador usa el mismo origen `/api` y no requiere SSH ni conexión directa al brazo. El PC queda para desarrollo y mantenimiento. La inferencia nativa y su integración con ROS se comprobaron sin movimientos; falta activar el servicio permanente y publicar el servidor/dominio. El [README del backend](../back-temp-rony/README.md) documenta instalación y despliegue.
 
+## Publicar el front en Netlify
+
+El archivo `netlify.toml` configura la compilación con Node 24, `npm run build` y publicación en `dist/Web-Angular/browser` (respetar mayúsculas). La rama es `main`, la carpeta base queda vacía y no se necesitan Functions. La regla SPA permite abrir o recargar `/dashboard`, `/monitoring` y `/classifications` directamente.
+
+Este primer despliegue publica la interfaz. La API sigue usando `/api` y requiere configurar su proxy HTTPS hacia la URL real del backend cuando esté disponible en Render; esa regla debe ir antes de la regla SPA. Hasta entonces, el monitoreo mostrará falta de conexión con la API. No añadir claves del brazo, de la web ni de la base de datos a las variables del front o al código Angular.
+
 ## Probar la aplicación integrada
 
 Desde `../back-temp-rony`:
