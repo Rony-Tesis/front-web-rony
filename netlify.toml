@@ -5,8 +5,14 @@
 [build.environment]
   NODE_VERSION = "24"
 
-# Add the /api proxy to the real Render backend before this SPA fallback
-# once that backend has been deployed. Never put private tokens in this file.
+# Keep browser requests and HttpOnly session cookies on the frontend origin.
+# API paths must be handled before the Angular SPA fallback.
+[[redirects]]
+  from = "/api/*"
+  to = "https://rony-api.onrender.com/api/:splat"
+  status = 200
+  force = true
+
 [[redirects]]
   from = "/*"
   to = "/index.html"

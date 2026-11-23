@@ -8,7 +8,7 @@ La arquitectura final ejecuta YOLO, selección, planificación y ROS dentro del 
 
 El archivo `netlify.toml` configura la compilación con Node 24, `npm run build` y publicación en `dist/Web-Angular/browser` (respetar mayúsculas). La rama es `main`, la carpeta base queda vacía y no se necesitan Functions. La regla SPA permite abrir o recargar `/dashboard`, `/monitoring` y `/classifications` directamente.
 
-Este primer despliegue publica la interfaz. La API sigue usando `/api` y requiere configurar su proxy HTTPS hacia la URL real del backend cuando esté disponible en Render; esa regla debe ir antes de la regla SPA. Hasta entonces, el monitoreo mostrará falta de conexión con la API. No añadir claves del brazo, de la web ni de la base de datos a las variables del front o al código Angular.
+El front publicado es `https://rony-brazo.netlify.app` y su API está en `https://rony-api.onrender.com`. Netlify envía `/api/*` hacia `/api/*` de Render antes de aplicar la regla SPA. El navegador conserva el mismo origen para peticiones, cámara y cookie de sesión. La dirección del backend es pública; las claves permanecen en la configuración privada de Render y del brazo. No añadir claves del brazo, de la web ni de la base de datos a las variables del front o al código Angular.
 
 ## Probar la aplicación integrada
 
