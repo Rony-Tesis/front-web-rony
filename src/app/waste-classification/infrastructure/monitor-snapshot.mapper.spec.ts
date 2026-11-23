@@ -12,6 +12,30 @@ describe('API anti-corruption layer', () => {
     expect(snapshot.detection).not.toBe(dto.detection);
   });
 
+  it('preserves unverified physical outcomes without counting them as successes', () => {
+    const dto = seed();
+    const total = dto.summary.total + 1;
+    const parsed = mapMonitorSnapshot({
+      ...dto,
+      summary: { ...dto.summary, total, unverified: 1 },
+      operations: [
+        {
+          ...dto.operations[0],
+          result: 'unverified',
+          destination: 'Plástico · provisional',
+          depositConfirmed: null,
+        },
+      ],
+    });
+    expect(parsed.summary.unverified).toBe(1);
+    expect(parsed.summary.successful).toBe(dto.summary.successful);
+    expect(parsed.operations[0]?.result).toBe('unverified');
+    expect(parsed.operations[0]?.depositConfirmed).toBeNull();
+    expect(() =>
+      mapMonitorSnapshot({ ...dto, summary: { ...dto.summary, unverified: 1 } }),
+    ).toThrow();
+  });
+
   it.each([null, {}, { process: [] }, 'unexpected'])('rejects malformed roots: %s', (value) => {
     expect(() => mapMonitorSnapshot(value)).toThrow();
   });

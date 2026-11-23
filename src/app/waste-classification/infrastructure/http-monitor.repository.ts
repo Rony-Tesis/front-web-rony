@@ -13,20 +13,30 @@ import {
   timeout,
   timer,
   switchMap,
+  startWith,
 } from 'rxjs';
 import { apiEndpoint, RUNTIME_CONFIG } from '../../core/config/runtime-config';
 import { apiErrorMessage } from '../../core/http/api-error';
 import { SimulationAction, RobotAction } from '../domain/monitor.models';
 import { MonitorRepository, MonitorUpdate } from '../application/monitor-repository';
 import { mapMonitorSnapshot } from './monitor-snapshot.mapper';
+import { ApiSession } from '../../core/http/api-session.service';
 
 @Injectable({ providedIn: 'root' })
 export class HttpMonitorRepository implements MonitorRepository {
+  private readonly session = inject(ApiSession);
   private readonly http = inject(HttpClient);
   private readonly config = inject(RUNTIME_CONFIG);
   private readonly endpoint = apiEndpoint(this.config.apiBasePath, 'v1/monitor/snapshot');
 
   watch(): Observable<MonitorUpdate> {
+    return this.session.changes.pipe(
+      startWith(undefined),
+      switchMap(() => this.connection()),
+    );
+  }
+
+  private connection(): Observable<MonitorUpdate> {
     return defer(() => {
       let nextAttemptAt = 0;
       let failures = 0;

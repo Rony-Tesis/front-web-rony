@@ -1,46 +1,47 @@
-# Monitor de clasificación · Angular y JetMax
+# Monitor Rony · Angular y JetMax
 
-Única interfaz para MIRA y JetMax: Panel principal, Monitoreo y Clasificaciones. Arquitectura por dominio, aplicación, infraestructura y presentación; cada componente tiene HTML, CSS y TypeScript separados.
+Interfaz para cámara, detección, trayectoria continua, tres destinos provisionales e historial. La referencia física es el notebook actual del repositorio `rony-yolo-isaac`.
 
-## Ejecutar con movimiento físico
+La arquitectura final ejecuta YOLO, selección, planificación y ROS dentro del JetMax; Angular/Spring/MySQL se despliegan en un servidor HTTPS. El brazo inicia el intercambio con esa API. El navegador usa el mismo origen `/api` y no requiere SSH ni conexión directa al brazo. El PC queda para desarrollo y mantenimiento. La inferencia nativa y su integración con ROS se comprobaron sin movimientos; falta activar el servicio permanente y publicar el servidor/dominio. El [README del backend](../back-temp-rony/README.md) documenta instalación y despliegue.
 
-Primera terminal PowerShell:
+## Probar la aplicación integrada
 
-```powershell
-cd C:\Users\PC\Desktop\Tesis\Back-Rony\back-rony
-.\run.ps1 -Mode Physical
-```
-
-Segunda terminal:
+Desde `../back-temp-rony`:
 
 ```powershell
-cd C:\Users\PC\Desktop\Tesis\Web-Angular
-npm start
+./prepare.ps1
+./run.ps1 -Mode Simulation
 ```
 
-Abre http://127.0.0.1:4200/monitoring. Debe indicar **Cámara real · JetMax físico**. Con el brazo en HOME, pinza vacía, calibración vigente y recorrido despejado, pulsa **Activar funcionamiento**. Espera un plástico ≥0.80 y 50 frames estables; luego aproxima, desciende, agarra, levanta y regresa a HOME sin soltar. El automático se desactiva al terminar: no deposita ni vuelve a agarrar el mismo objeto.
+Abre `http://127.0.0.1:8000/monitoring`. La clave web está en `../rony-yolo-isaac/config.local.json`, campo `web_access_token`. Se establece una cookie HttpOnly; la clave no se guarda en almacenamiento del navegador. Tras iniciar sesión, el monitoreo se reconecta inmediatamente.
 
-La cámara MJPEG continúa durante los movimientos y el backend publica SSE a 10 Hz. Monitoreo muestra cada paso, XYZ y ángulo de pinza reportados por ROS. Estos valores son el estado del controlador, no mediciones de encoders. Comprueba el agarre en el video. **Cancelar siguientes movimientos** permite terminar el tramo ya enviado; no es una parada de emergencia física. Para otra prueba pulsa **Resetear · HOME y abrir pinza** con el recorrido despejado y una superficie preparada para recibir el objeto. El reset vuelve a HOME, abre a 0° y limpia el ciclo; luego pulsa **Activar funcionamiento**. No necesitas reiniciar el backend. Durante un movimiento primero cancela y espera que termine el tramo.
+La web está incluida en el JAR de Spring y `/api` comparte el mismo origen. No se necesita un servidor Angular de desarrollo para probar. Para modificar la interfaz en desarrollo, `npm start` conserva el proxy hacia `127.0.0.1:8000`.
 
-Las dependencias ya están instaladas en este PC. El [README del backend](../Back-Rony/back-rony/README.md) contiene límites, credenciales y funcionamiento completo. No ejecutes el notebook ni otro controlador al mismo tiempo.
+## Banco anterior con el brazo conectado
 
-## Fuente de datos
+Instala una vez `../back-temp-rony/robot_agent/dist/rony-agent.tar.gz` en el JetMax siguiendo el README del backend. El servicio del brazo arranca con el equipo y recibe trayectorias por HTTP privado autenticado; no necesita SSH durante las recogidas.
 
-`npm start` y `ng serve` consumen la API Spring del puerto 8000 a través del proxy. Si la API o el hardware no están disponibles, se muestra el estado de desconexión; no se cambia al mock local. Spring arranca en modo físico por defecto y no guarda ciclos virtuales en MySQL. Los agarres físicos se registran aparte de las clasificaciones con depósito confirmado.
+```powershell
+# Desde back-temp-rony
+./check-ready.ps1 -Robot -RobotHost 192.168.1.50
+./run.ps1 -Mode Physical -RobotHost 192.168.1.50
+```
 
-## Verificación
+Los arranques no mueven el brazo. **Iniciar clasificación continua** prepara HOME y pinza vacía, espera confianza ≥0.80 y 8 frames nuevos, recoge con cierre a 80°, eleva verticalmente hasta Z=212.8, vuelve a HOME y después gira para descargar manteniendo esa altura. Aluminio usa 190°, cartón 210° y plástico 230° de la base. Tras descargar vuelve en alto a HOME y analiza de nuevo; si no hay residuos sigue esperando hasta cancelar. Son ubicaciones provisionales, no tachos medidos. La calibración original se lee del brazo y no se escribe.
 
-```sh
+**Cancelar siguientes movimientos** termina el tramo publicado y bloquea los siguientes; no es una parada de emergencia eléctrica. **Resetear** vuelve a HOME y abre la pinza. El controlador reporta consignas, no encoders. Las trayectorias terminadas aparecen como **Verificar depósito**; no se cuentan como éxitos sin comprobación. `holdingObject` y `depositConfirmed` permanecen null.
+
+Al final del panel que se muestra con el ojo, **Cerrar pinza · 90°** cierra durante 1 s y **Posición de guardado** lleva a `(-42.6878, -27.0905, 225.0)` durante 3 s. Se habilitan con el automático detenido; guardar requiere HOME. Después, **Resetear** vuelve a HOME y abre la pinza antes de iniciar la clasificación. Requieren actualizar nuestro agente del banco con `../back-temp-rony/update-agent.ps1`; también están incluidos en el runtime autónomo. No cambian la calibración ni el cierre automático de 80°, y no generan registros de clasificación.
+
+## Contrato y verificación
+
+[Contrato OpenAPI](docs/api-contract.openapi.json). El cliente valida respuestas, conserva datos desactualizados durante fallos y utiliza SSE con recuperación HTTP. Las acciones físicas son `arm`, `cancel`, `reset`, `close-gripper` y `park`; la web no maneja credenciales del agente ni coordenadas de movimiento.
+
+```powershell
 npm run build
 npm run test:ci
 npm run check:architecture
 npm run format:check
 ```
 
-## API
-
-[Contrato OpenAPI](docs/api-contract.openapi.json). El proxy `/api` apunta a `127.0.0.1:8000` bajo el mismo origen. El cliente valida todas las respuestas y eventos; reconecta SSE con recuperación HTTP y conserva los datos anteriores como desactualizados durante errores. Los servidores sin SSE siguen usando consultas periódicas.
-
-Los controles físicos envían únicamente `arm`, `cancel` o `reset`; no contienen credenciales SSH ni coordenadas arbitrarias. No se permiten controles virtuales mientras se usa hardware. La autenticación y permisos de producción corresponden al servidor.
-
-El panel muestra aluminio, cartón y plástico detectados, aunque no sean candidatos para el agarre. `detection` describe la imagen; `targetDetection` congela el objetivo del ciclo. El ciclo físico conserva los requisitos del notebook y no se registra como una clasificación con depósito. `holdingObject` es `null` porque el hardware no confirma presencia: cerrar la pinza no prueba un agarre exitoso.
+El backend tiene pruebas de comunicación con el agente Python falso, sin mover hardware. El README de `../back-temp-rony` describe distribución, Wi-Fi LAN, instalación, persistencia, configuración y condiciones pendientes de la prueba física.

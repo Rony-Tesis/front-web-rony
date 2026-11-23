@@ -67,7 +67,7 @@ export class MonitorFacade {
       !this.controlPending() &&
       snapshot?.motionMode === 'physical' &&
       snapshot.robotState?.connected === true &&
-      snapshot.robotState.state === 'idle' &&
+      (snapshot.robotState.state === 'idle' || snapshot.robotState.state === 'finished') &&
       snapshot.equipment.some((item) => item.id === 'camera' && item.status === 'online')
     );
   });
@@ -94,6 +94,23 @@ export class MonitorFacade {
       robot.state !== 'resetting'
     );
   });
+  readonly canUseManualControls = computed(() => {
+    const snapshot = this.snapshot();
+    const robot = snapshot?.robotState;
+    return (
+      !!this.repository.commandRobot &&
+      !this.error() &&
+      !this.controlPending() &&
+      snapshot?.motionMode === 'physical' &&
+      robot?.connected === true &&
+      !robot.autoEnabled &&
+      !robot.cycleActive &&
+      !['connecting', 'resetting', 'fault'].includes(robot.state)
+    );
+  });
+  readonly canParkRobot = computed(
+    () => this.canUseManualControls() && this.snapshot()?.robotState?.state !== 'parked',
+  );
   readonly stateLabel = computed(() => {
     const snapshot = this.snapshot();
     if (!snapshot) return 'En espera';
@@ -151,6 +168,14 @@ export class MonitorFacade {
     if (this.canResetRobot()) this.commandRobot('reset');
   }
 
+  closeGripper(): void {
+    if (this.canUseManualControls()) this.commandRobot('close-gripper');
+  }
+
+  parkRobot(): void {
+    if (this.canParkRobot()) this.commandRobot('park');
+  }
+
   private commandRobot(action: RobotAction): void {
     if (!this.repository.commandRobot || this.controlPending()) return;
     this.controlPendingState.set(true);
@@ -166,7 +191,9 @@ export class MonitorFacade {
         error: (error: unknown) =>
           this.controlErrorState.set(
             error instanceof HttpErrorResponse && error.status === 409
-              ? 'El robot bloqueó el comando. Revisa HOME, pinza vacía, conexión y que no haya otro ciclo activo.'
+              ? typeof error.error?.detail === 'string'
+                ? error.error.detail.slice(0, 200)
+                : 'El robot bloqueó el comando. Revisa HOME, pinza vacía, conexión y que no haya otro ciclo activo.'
               : apiErrorMessage(error),
           ),
       });
@@ -187,7 +214,7 @@ export class MonitorFacade {
         error: (error: unknown) =>
           this.controlErrorState.set(
             error instanceof HttpErrorResponse && error.status === 409
-              ? 'No se puede iniciar el ciclo virtual. Espera que termine el anterior y que el plástico alcance 50 frames estables con confianza mínima de 0.80.'
+              ? 'No se puede iniciar el ciclo virtual. Espera que termine el anterior y que el objetivo alcance los frames estables requeridos con confianza mínima de 0.80.'
               : apiErrorMessage(error),
           ),
       });

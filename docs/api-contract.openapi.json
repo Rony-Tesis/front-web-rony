@@ -1,72 +1,34 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Rony: cámara y JetMax",
-    "version": "0.2.0",
-    "description": "MIRA camera, continuous telemetry and optional physical JetMax grasp cycle. Physical grasp ends at HOME with the gripper closed; object presence is unverified and no classification deposit is claimed. Physical commands are enabled only by explicit backend configuration. Local API defaults to loopback; shared deployments require authentication. Reset explicitly returns HOME and opens the gripper; it never starts a new grasp automatically."
+    "title": "Rony cámara y JetMax",
+    "description": "API Spring Boot compatible con Angular. SSE/MJPEG y control físico asíncrono. El token es opcional en configuración local.",
+    "version": "1.0.0"
   },
+  "servers": [
+    {
+      "url": "/"
+    }
+  ],
   "paths": {
-    "/v1/monitor/snapshot": {
-      "get": {
-        "summary": "Snapshot",
-        "operationId": "snapshot_api_v1_monitor_snapshot_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Snapshot"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {},
-          {
-            "sessionCookie": []
-          },
-          {
-            "bearerToken": []
-          }
-        ]
-      }
-    },
-    "/v1/monitor/events": {
-      "get": {
-        "summary": "Events",
-        "operationId": "events_api_v1_monitor_events_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          }
-        },
-        "security": [
-          {},
-          {
-            "sessionCookie": []
-          },
-          {
-            "bearerToken": []
-          }
-        ]
-      }
-    },
-    "/v1/robot/commands": {
+    "/api/v1/simulation/commands": {
       "post": {
-        "summary": "Robot Command",
-        "operationId": "robot_command_api_v1_robot_commands_post",
+        "tags": ["command-controller"],
+        "summary": "Pausar, reanudar o ejecutar un ciclo virtual",
+        "operationId": "virtual",
+        "parameters": [
+          {
+            "name": "X-Rony-Control",
+            "in": "header",
+            "description": "Valor obligatorio: 1",
+            "required": true
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/PhysicalCommand"
+                "$ref": "#/components/schemas/VirtualCommand"
               }
             }
           },
@@ -74,181 +36,40 @@
         },
         "responses": {
           "200": {
-            "description": "Successful Response",
+            "description": "OK",
             "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
+              "*/*": {
                 "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+                  "type": "object",
+                  "additionalProperties": {}
                 }
               }
             }
           }
         },
         "security": [
-          {},
           {
             "sessionCookie": []
           },
           {
             "bearerToken": []
           }
-        ],
+        ]
+      }
+    },
+    "/api/v1/session": {
+      "post": {
+        "tags": ["session-controller"],
+        "summary": "Validar el token configurado y crear una cookie HttpOnly por una hora",
+        "operationId": "login",
         "parameters": [
           {
             "name": "X-Rony-Control",
             "in": "header",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "const": "1"
-            }
-          }
-        ]
-      }
-    },
-    "/v1/monitor/status": {
-      "get": {
-        "summary": "Status",
-        "operationId": "status_api_v1_monitor_status_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          }
-        },
-        "security": [
-          {},
-          {
-            "sessionCookie": []
-          },
-          {
-            "bearerToken": []
-          }
-        ]
-      }
-    },
-    "/v1/monitor/frame": {
-      "get": {
-        "summary": "Frame",
-        "operationId": "frame_api_v1_monitor_frame_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          }
-        },
-        "security": [
-          {},
-          {
-            "sessionCookie": []
-          },
-          {
-            "bearerToken": []
-          }
-        ]
-      }
-    },
-    "/v1/monitor/stream": {
-      "get": {
-        "summary": "Stream",
-        "operationId": "stream_api_v1_monitor_stream_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          }
-        },
-        "security": [
-          {},
-          {
-            "sessionCookie": []
-          },
-          {
-            "bearerToken": []
-          }
-        ]
-      }
-    },
-    "/v1/simulation/commands": {
-      "post": {
-        "summary": "Command",
-        "operationId": "command_api_v1_simulation_commands_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/Command"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {},
-          {
-            "sessionCookie": []
-          },
-          {
-            "bearerToken": []
+            "description": "Valor obligatorio: 1",
+            "required": true
           }
         ],
-        "parameters": [
-          {
-            "name": "X-Rony-Control",
-            "in": "header",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "const": "1"
-            }
-          }
-        ]
-      }
-    },
-    "/v1/session": {
-      "post": {
-        "summary": "Login",
-        "operationId": "login_api_v1_session_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -261,19 +82,11 @@
         },
         "responses": {
           "200": {
-            "description": "Successful Response",
+            "description": "OK",
             "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
+              "*/*": {
                 "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+                  "type": "object"
                 }
               }
             }
@@ -281,22 +94,213 @@
         }
       }
     },
-    "/v1/openapi.json": {
-      "get": {
-        "summary": "Schema",
-        "operationId": "schema_api_v1_openapi_json_get",
+    "/api/v1/robot/commands": {
+      "post": {
+        "tags": ["command-controller"],
+        "summary": "Solicitar activar, cancelar o resetear el JetMax",
+        "description": "200 confirma aceptación, no fin del movimiento. Reset vuelve a HOME y abre la pinza; cancel espera el tramo en curso.",
+        "operationId": "physical",
+        "parameters": [
+          {
+            "name": "X-Rony-Control",
+            "in": "header",
+            "description": "Valor obligatorio: 1",
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PhysicalCommand"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
-          "200": {
-            "description": "Successful Response",
+          "403": {
+            "description": "Cabecera u origen inválido",
             "content": {
-              "application/json": {
-                "schema": {}
+              "*/*": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {}
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Modo o estado incompatible",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {}
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "JSON inválido",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {}
+                }
               }
             }
           }
         },
         "security": [
-          {},
+          {
+            "sessionCookie": []
+          },
+          {
+            "bearerToken": []
+          }
+        ]
+      }
+    },
+    "/api/v1/monitor/stream": {
+      "get": {
+        "tags": ["monitor-controller"],
+        "summary": "Ver MJPEG compartido sin crear inferencias por cliente",
+        "operationId": "stream",
+        "responses": {
+          "429": {
+            "description": "Máximo de conexiones de streaming alcanzado",
+            "content": {
+              "multipart/x-mixed-replace": {
+                "schema": {
+                  "$ref": "#/components/schemas/StreamingResponseBody"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Cámara no disponible",
+            "content": {
+              "multipart/x-mixed-replace": {
+                "schema": {
+                  "$ref": "#/components/schemas/StreamingResponseBody"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "sessionCookie": []
+          },
+          {
+            "bearerToken": []
+          }
+        ]
+      }
+    },
+    "/api/v1/monitor/status": {
+      "get": {
+        "tags": ["monitor-controller"],
+        "summary": "Consultar disponibilidad, modos y estado del JetMax",
+        "operationId": "status",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "sessionCookie": []
+          },
+          {
+            "bearerToken": []
+          }
+        ]
+      }
+    },
+    "/api/v1/monitor/snapshot": {
+      "get": {
+        "tags": ["monitor-controller"],
+        "summary": "Consultar el snapshot coherente de cámara y proceso",
+        "operationId": "snapshot",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/MonitorSnapshot"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "sessionCookie": []
+          },
+          {
+            "bearerToken": []
+          }
+        ]
+      }
+    },
+    "/api/v1/monitor/frame": {
+      "get": {
+        "tags": ["monitor-controller"],
+        "summary": "Obtener el último JPEG procesado",
+        "operationId": "frame",
+        "responses": {
+          "503": {
+            "description": "Sin imagen disponible; Retry-After: 2",
+            "content": {
+              "image/jpeg": {
+                "schema": {
+                  "type": "string",
+                  "format": "byte"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "sessionCookie": []
+          },
+          {
+            "bearerToken": []
+          }
+        ]
+      }
+    },
+    "/api/v1/monitor/events": {
+      "get": {
+        "tags": ["monitor-controller"],
+        "summary": "Suscribirse a snapshots SSE aproximadamente cada 100 ms",
+        "operationId": "events",
+        "responses": {
+          "429": {
+            "description": "Máximo de conexiones de streaming alcanzado",
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "$ref": "#/components/schemas/StreamingResponseBody"
+                }
+              }
+            }
+          }
+        },
+        "security": [
           {
             "sessionCookie": []
           },
@@ -309,674 +313,369 @@
   },
   "components": {
     "schemas": {
-      "Command": {
+      "VirtualCommand": {
+        "type": "object",
         "properties": {
           "action": {
             "type": "string",
-            "enum": ["pause", "resume", "cycle"],
-            "title": "Action"
+            "pattern": "pause|resume|cycle"
           }
         },
-        "additionalProperties": false,
-        "type": "object",
-        "required": ["action"],
-        "title": "Command"
-      },
-      "Detection": {
-        "properties": {
-          "residue": {
-            "type": "string",
-            "maxLength": 160,
-            "title": "Residue"
-          },
-          "shortName": {
-            "type": "string",
-            "maxLength": 40,
-            "title": "Shortname"
-          },
-          "category": {
-            "type": "string",
-            "enum": ["plastic", "cardboard", "aluminum"],
-            "title": "Category"
-          },
-          "confidence": {
-            "type": "number",
-            "maximum": 1.0,
-            "minimum": 0.0,
-            "title": "Confidence"
-          },
-          "pixel": {
-            "$ref": "#/components/schemas/Position"
-          },
-          "offsetMm": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/Position"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "targetMm": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/Position"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "destination": {
-            "type": "string",
-            "maxLength": 160,
-            "title": "Destination"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "residue",
-          "shortName",
-          "category",
-          "confidence",
-          "pixel",
-          "offsetMm",
-          "targetMm",
-          "destination"
-        ],
-        "title": "Detection"
-      },
-      "Equipment": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "enum": ["camera", "yolo", "robot", "gripper", "planner"],
-            "title": "Id"
-          },
-          "status": {
-            "type": "string",
-            "enum": ["online", "offline", "unknown"],
-            "title": "Status"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": ["id", "status"],
-        "title": "Equipment"
-      },
-      "HTTPValidationError": {
-        "properties": {
-          "detail": {
-            "items": {
-              "$ref": "#/components/schemas/ValidationError"
-            },
-            "type": "array",
-            "title": "Detail"
-          }
-        },
-        "type": "object",
-        "title": "HTTPValidationError"
+        "required": ["action"]
       },
       "Login": {
+        "type": "object",
         "properties": {
           "token": {
             "type": "string",
             "maxLength": 256,
-            "minLength": 24,
-            "title": "Token"
+            "minLength": 24
           }
         },
-        "additionalProperties": false,
-        "type": "object",
-        "required": ["token"],
-        "title": "Login"
-      },
-      "Operation": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "title": "Id"
-          },
-          "completedAt": {
-            "type": "string",
-            "title": "Completedat"
-          },
-          "residue": {
-            "type": "string",
-            "title": "Residue"
-          },
-          "category": {
-            "type": "string",
-            "enum": ["plastic", "cardboard", "aluminum"],
-            "title": "Category"
-          },
-          "confidence": {
-            "type": "number",
-            "maximum": 1.0,
-            "minimum": 0.0,
-            "title": "Confidence"
-          },
-          "result": {
-            "type": "string",
-            "enum": ["success", "failure"],
-            "title": "Result"
-          },
-          "durationMs": {
-            "type": "integer",
-            "minimum": 0.0,
-            "title": "Durationms"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "id",
-          "completedAt",
-          "residue",
-          "category",
-          "confidence",
-          "result",
-          "durationMs"
-        ],
-        "title": "Operation"
+        "required": ["token"]
       },
       "PhysicalCommand": {
+        "type": "object",
         "properties": {
           "action": {
             "type": "string",
-            "enum": ["arm", "cancel", "reset"],
-            "title": "Action"
+            "pattern": "arm|cancel|reset|close-gripper|park"
           }
         },
-        "additionalProperties": false,
-        "type": "object",
-        "required": ["action"],
-        "title": "PhysicalCommand"
+        "required": ["action"]
       },
-      "Position": {
+      "StreamingResponseBody": {},
+      "Detection": {
+        "type": "object",
         "properties": {
-          "x": {
-            "type": "number",
-            "maximum": 1000000.0,
-            "minimum": -1000000.0,
-            "title": "X"
+          "residue": {
+            "type": "string"
           },
-          "y": {
+          "shortName": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "confidence": {
             "type": "number",
-            "maximum": 1000000.0,
-            "minimum": -1000000.0,
-            "title": "Y"
+            "format": "double"
+          },
+          "pixel": {
+            "$ref": "#/components/schemas/Point"
+          },
+          "offsetMm": {
+            "$ref": "#/components/schemas/Point"
+          },
+          "targetMm": {
+            "$ref": "#/components/schemas/Point"
+          },
+          "destination": {
+            "type": "string"
           }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": ["x", "y"],
-        "title": "Position"
+        }
       },
-      "Process": {
+      "Equipment": {
+        "type": "object",
         "properties": {
-          "stageIndex": {
-            "type": "integer",
-            "maximum": 5.0,
-            "minimum": 0.0,
-            "title": "Stageindex"
+          "id": {
+            "type": "string"
           },
-          "elapsedMs": {
-            "type": "integer",
-            "maximum": 86400000.0,
-            "minimum": 0.0,
-            "title": "Elapsedms"
-          },
-          "stageElapsedMs": {
-            "type": "integer",
-            "maximum": 86400000.0,
-            "minimum": 0.0,
-            "title": "Stageelapsedms"
-          },
-          "stageDurationsMs": {
-            "items": {
-              "type": "integer"
-            },
-            "type": "array",
-            "maxItems": 6,
-            "minItems": 6,
-            "title": "Stagedurationsms"
-          },
-          "progressPercent": {
-            "type": "number",
-            "maximum": 100.0,
-            "minimum": 0.0,
-            "title": "Progresspercent"
-          },
-          "completed": {
-            "type": "boolean",
-            "title": "Completed"
-          },
-          "lastResult": {
-            "anyOf": [
-              {
-                "type": "string",
-                "enum": ["success", "failure"]
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Lastresult"
-          },
-          "gripperClosed": {
-            "type": "boolean",
-            "title": "Gripperclosed"
+          "status": {
+            "type": "string"
           }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "stageIndex",
-          "elapsedMs",
-          "stageElapsedMs",
-          "stageDurationsMs",
-          "progressPercent",
-          "completed",
-          "lastResult",
-          "gripperClosed"
-        ],
-        "title": "Process"
+        }
       },
-      "RobotPosition": {
+      "JointAngles": {
+        "type": "object",
         "properties": {
-          "x": {
+          "joint1": {
             "type": "number",
-            "maximum": 1000000.0,
-            "minimum": -1000000.0,
-            "title": "X"
+            "format": "double"
           },
-          "y": {
+          "joint2": {
             "type": "number",
-            "maximum": 1000000.0,
-            "minimum": -1000000.0,
-            "title": "Y"
+            "format": "double"
           },
-          "z": {
+          "joint3": {
             "type": "number",
-            "maximum": 1000000.0,
-            "minimum": -1000000.0,
-            "title": "Z"
+            "format": "double"
           }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": ["x", "y", "z"],
-        "title": "RobotPosition"
+        }
       },
-      "RobotState": {
-        "properties": {
-          "connected": {
-            "type": "boolean",
-            "title": "Connected"
-          },
-          "state": {
-            "type": "string",
-            "enum": [
-              "connecting",
-              "idle",
-              "preparing",
-              "waiting",
-              "countdown",
-              "moving",
-              "holding",
-              "cancelled",
-              "fault",
-              "resetting"
-            ],
-            "title": "State"
-          },
-          "stepLabel": {
-            "type": "string",
-            "maxLength": 200,
-            "title": "Steplabel"
-          },
-          "autoEnabled": {
-            "type": "boolean",
-            "title": "Autoenabled"
-          },
-          "cycleActive": {
-            "type": "boolean",
-            "title": "Cycleactive"
-          },
-          "holdingObject": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Holdingobject"
-          },
-          "completedGrasps": {
-            "type": "integer",
-            "minimum": 0.0,
-            "title": "Completedgrasps"
-          },
-          "reportedPosition": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/RobotPosition"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "gripperAngle": {
-            "anyOf": [
-              {
-                "type": "number",
-                "maximum": 180.0,
-                "minimum": 0.0
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Gripperangle"
-          },
-          "reportedJoints": {
-            "description": "Ángulos en grados reportados por el controlador ROS.",
-            "anyOf": [
-              {
-                "type": "object",
-                "properties": {
-                  "joint1": { "type": "number" },
-                  "joint2": { "type": "number" },
-                  "joint3": { "type": "number" }
-                },
-                "required": ["joint1", "joint2", "joint3"]
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "telemetryAt": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Telemetryat"
-          },
-          "error": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 200
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Error"
-          }
-        },
-        "additionalProperties": false,
+      "MonitorSnapshot": {
         "type": "object",
-        "required": [
-          "connected",
-          "state",
-          "stepLabel",
-          "autoEnabled",
-          "cycleActive",
-          "holdingObject",
-          "completedGrasps",
-          "reportedPosition",
-          "telemetryAt",
-          "error"
-        ],
-        "title": "RobotState"
-      },
-      "SimulationState": {
-        "properties": {
-          "paused": {
-            "type": "boolean",
-            "title": "Paused"
-          },
-          "cycleActive": {
-            "type": "boolean",
-            "title": "Cycleactive"
-          },
-          "stableFrames": {
-            "type": "integer",
-            "minimum": 0.0,
-            "title": "Stableframes"
-          },
-          "requiredStableFrames": {
-            "type": "integer",
-            "minimum": 1.0,
-            "title": "Requiredstableframes"
-          },
-          "targetReady": {
-            "type": "boolean",
-            "title": "Targetready"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "paused",
-          "cycleActive",
-          "stableFrames",
-          "requiredStableFrames",
-          "targetReady"
-        ],
-        "title": "SimulationState"
-      },
-      "Snapshot": {
         "properties": {
           "experimentalMode": {
-            "type": "string",
-            "enum": ["optimized", "baseline"],
-            "title": "Experimentalmode"
+            "type": "string"
           },
           "updatedAt": {
             "type": "string",
-            "title": "Updatedat"
+            "format": "date-time"
           },
           "sourceMode": {
-            "type": "string",
-            "enum": ["simulation", "live"],
-            "title": "Sourcemode"
+            "type": "string"
           },
           "motionMode": {
-            "type": "string",
-            "enum": ["simulation", "physical"],
-            "title": "Motionmode"
+            "type": "string"
           },
           "telemetryTransport": {
-            "type": "string",
-            "const": "sse",
-            "title": "Telemetrytransport",
-            "default": "sse"
+            "type": "string"
           },
           "robotState": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/RobotState"
-              },
-              {
-                "type": "null"
-              }
-            ]
+            "$ref": "#/components/schemas/RobotState"
           },
           "cameraTransport": {
-            "type": "string",
-            "const": "mjpeg",
-            "title": "Cameratransport"
+            "type": "string"
           },
           "simulationState": {
             "$ref": "#/components/schemas/SimulationState"
           },
           "detection": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/Detection"
-              },
-              {
-                "type": "null"
-              }
-            ]
+            "$ref": "#/components/schemas/Detection"
           },
           "targetDetection": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/Detection"
-              },
-              {
-                "type": "null"
-              }
-            ]
+            "$ref": "#/components/schemas/Detection"
           },
           "process": {
-            "$ref": "#/components/schemas/Process"
+            "$ref": "#/components/schemas/ProcessState"
           },
           "summary": {
             "$ref": "#/components/schemas/Summary"
           },
           "operations": {
+            "type": "array",
             "items": {
               "$ref": "#/components/schemas/Operation"
-            },
-            "type": "array",
-            "maxItems": 100,
-            "title": "Operations"
+            }
           },
           "equipment": {
+            "type": "array",
             "items": {
               "$ref": "#/components/schemas/Equipment"
-            },
-            "type": "array",
-            "maxItems": 5,
-            "minItems": 5,
-            "title": "Equipment"
+            }
           },
           "framesPerSecond": {
             "type": "number",
-            "maximum": 240.0,
-            "minimum": 0.0,
-            "title": "Framespersecond"
+            "format": "double"
           }
-        },
-        "additionalProperties": false,
+        }
+      },
+      "Operation": {
         "type": "object",
-        "required": [
-          "experimentalMode",
-          "updatedAt",
-          "sourceMode",
-          "motionMode",
-          "cameraTransport",
-          "simulationState",
-          "detection",
-          "targetDetection",
-          "process",
-          "summary",
-          "operations",
-          "equipment",
-          "framesPerSecond"
-        ],
-        "title": "Snapshot"
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "completedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "residue": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "confidence": {
+            "type": "number",
+            "format": "double"
+          },
+          "result": {
+            "type": "string"
+          },
+          "durationMs": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "destination": {
+            "type": "string"
+          },
+          "depositConfirmed": {
+            "type": "boolean"
+          }
+        }
+      },
+      "Point": {
+        "type": "object",
+        "properties": {
+          "x": {
+            "type": "number",
+            "format": "double"
+          },
+          "y": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "ProcessState": {
+        "type": "object",
+        "properties": {
+          "stageIndex": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "elapsedMs": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "stageElapsedMs": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "stageDurationsMs": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          "progressPercent": {
+            "type": "number",
+            "format": "double"
+          },
+          "completed": {
+            "type": "boolean"
+          },
+          "lastResult": {
+            "type": "string"
+          },
+          "gripperClosed": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ReportedPosition": {
+        "type": "object",
+        "properties": {
+          "x": {
+            "type": "number",
+            "format": "double"
+          },
+          "y": {
+            "type": "number",
+            "format": "double"
+          },
+          "z": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "RobotState": {
+        "type": "object",
+        "properties": {
+          "connected": {
+            "type": "boolean"
+          },
+          "state": {
+            "type": "string"
+          },
+          "stepLabel": {
+            "type": "string"
+          },
+          "autoEnabled": {
+            "type": "boolean"
+          },
+          "cycleActive": {
+            "type": "boolean"
+          },
+          "holdingObject": {
+            "type": "boolean"
+          },
+          "completedGrasps": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "reportedPosition": {
+            "$ref": "#/components/schemas/ReportedPosition"
+          },
+          "gripperAngle": {
+            "type": "number",
+            "format": "double"
+          },
+          "reportedJoints": {
+            "$ref": "#/components/schemas/JointAngles"
+          },
+          "telemetryAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "error": {
+            "type": "string"
+          },
+          "completedCycles": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "provisionalDestinations": {
+            "type": "boolean"
+          }
+        }
+      },
+      "SimulationState": {
+        "type": "object",
+        "properties": {
+          "paused": {
+            "type": "boolean"
+          },
+          "cycleActive": {
+            "type": "boolean"
+          },
+          "stableFrames": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "requiredStableFrames": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "targetReady": {
+            "type": "boolean"
+          }
+        }
       },
       "Summary": {
+        "type": "object",
         "properties": {
           "processedToday": {
             "type": "integer",
-            "minimum": 0.0,
-            "title": "Processedtoday"
+            "format": "int64"
           },
           "total": {
             "type": "integer",
-            "minimum": 0.0,
-            "title": "Total"
+            "format": "int64"
           },
           "successful": {
             "type": "integer",
-            "minimum": 0.0,
-            "title": "Successful"
+            "format": "int64"
           },
           "failed": {
             "type": "integer",
-            "minimum": 0.0,
-            "title": "Failed"
+            "format": "int64"
           },
           "averageDurationMs": {
             "type": "number",
-            "minimum": 0.0,
-            "title": "Averagedurationms"
+            "format": "double"
+          },
+          "unverified": {
+            "type": "integer",
+            "format": "int64"
           }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": ["processedToday", "total", "successful", "failed", "averageDurationMs"],
-        "title": "Summary"
-      },
-      "ValidationError": {
-        "properties": {
-          "loc": {
-            "items": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "integer"
-                }
-              ]
-            },
-            "type": "array",
-            "title": "Location"
-          },
-          "msg": {
-            "type": "string",
-            "title": "Message"
-          },
-          "type": {
-            "type": "string",
-            "title": "Error Type"
-          },
-          "input": {
-            "title": "Input"
-          },
-          "ctx": {
-            "type": "object",
-            "title": "Context"
-          }
-        },
-        "type": "object",
-        "required": ["loc", "msg", "type"],
-        "title": "ValidationError"
+        }
       }
     },
     "securitySchemes": {
-      "sessionCookie": {
-        "type": "apiKey",
-        "in": "cookie",
-        "name": "rony_session"
-      },
       "bearerToken": {
         "type": "http",
         "scheme": "bearer"
+      },
+      "sessionCookie": {
+        "type": "apiKey",
+        "name": "rony_session",
+        "in": "cookie"
       }
     }
-  },
-  "servers": [
-    {
-      "url": "/api"
-    }
-  ]
+  }
 }

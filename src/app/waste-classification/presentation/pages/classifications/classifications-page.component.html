@@ -7,6 +7,12 @@
     @if (snapshot.sourceMode === 'simulation') {
       <p>Modo de demostración. Los resultados de este historial son simulados.</p>
     }
+    @if (snapshot.summary.unverified) {
+      <p role="status">
+        {{ snapshot.summary.unverified }} recorridos terminados tienen el depósito pendiente de
+        comprobación visual.
+      </p>
+    }
     <div class="metrics">
       <app-metric-card
         label="Total de operaciones"

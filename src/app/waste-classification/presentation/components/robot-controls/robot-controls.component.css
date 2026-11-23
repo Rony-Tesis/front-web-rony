@@ -120,3 +120,22 @@ button.visibility-toggle:hover {
   background: var(--blue-soft);
   color: var(--blue);
 }
+
+.manual-controls {
+  border-top: 1px solid var(--card-border);
+  margin-top: 20px;
+  padding-top: 16px;
+}
+.manual-controls h3 {
+  margin: 0;
+  color: var(--navy);
+  font-size: 15px;
+}
+button.manual-close {
+  background: var(--blue-soft);
+  color: var(--blue);
+}
+button.manual-park {
+  background: var(--navy);
+  border-color: var(--navy);
+}

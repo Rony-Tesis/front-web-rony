@@ -5,8 +5,12 @@
     class="visibility-toggle"
     type="button"
     aria-controls="jetmax-controls"
-    [attr.aria-label]="controlsVisible() ? 'Ocultar controles del JetMax' : 'Mostrar controles del JetMax'"
-    [attr.title]="controlsVisible() ? 'Ocultar controles del JetMax' : 'Mostrar controles del JetMax'"
+    [attr.aria-label]="
+      controlsVisible() ? 'Ocultar controles del JetMax' : 'Mostrar controles del JetMax'
+    "
+    [attr.title]="
+      controlsVisible() ? 'Ocultar controles del JetMax' : 'Mostrar controles del JetMax'
+    "
     [attr.aria-expanded]="controlsVisible()"
     (click)="toggleControls()"
   >
@@ -32,7 +36,10 @@
     <div class="header">
       <div>
         <h2 id="robot-control-title">JetMax · movimiento físico automático</h2>
-        <p>Preparar → detectar → agarrar → levantar → volver a HOME con la pinza cerrada.</p>
+        <p>
+          Recoger → elevar verticalmente a altura HOME → HOME → girar y descargar en alto → HOME →
+          analizar de nuevo. Continúa hasta cancelar.
+        </p>
       </div>
       <span class="badge" [class.disconnected]="!robot?.connected">{{
         robot?.connected ? 'ROS conectado' : 'ROS sin conexión'
@@ -76,19 +83,20 @@
           </dd>
         </div>
         <div>
-          <dt>Ciclos de agarre ejecutados</dt>
-          <dd>{{ robot.completedGrasps }}</dd>
+          <dt>Recorridos de recogida y descarga</dt>
+          <dd>{{ robot.completedCycles ?? robot.completedGrasps }}</dd>
         </div>
       </dl>
-      @if (robot.state === 'idle') {
+      @if (robot.state === 'idle' || robot.state === 'finished') {
         <p>
           Activa con la pinza vacía, calibración vigente y recorrido despejado. Se abrirá la pinza y
-          esperará plástico con confianza ≥0.80 y 50 frames estables.
+          esperará un residuo con confianza ≥0.80 y 8 frames estables.
         </p>
       }
       @if (robot.state === 'waiting' || robot.state === 'countdown') {
         <p>
-          Estabilidad: {{ monitor.snapshot()?.simulationState?.stableFrames ?? 0 }} / 50 frames.
+          Estabilidad: {{ monitor.snapshot()?.simulationState?.stableFrames ?? 0 }} /
+          {{ snapshot?.simulationState?.requiredStableFrames ?? 8 }} frames.
         </p>
       }
       @if (robot.state === 'resetting') {
@@ -97,16 +105,21 @@
           prueba.
         </p>
       }
-      @if (robot.state === 'holding') {
+      @if (robot.provisionalDestinations) {
         <p>
-          La pinza se conserva cerrada en HOME. Comprueba el agarre en la cámara. No se soltará ni
-          comenzará otro ciclo automáticamente.
+          Descargas provisionales en el sector lateral: aluminio a 190°, cartón a 210° y plástico a
+          230° de la base. El extremo de 240° conserva un margen de 10°. Todavía no son tachos
+          medidos.
         </p>
       }
+      <p>
+        Con la mesa vacía seguirá esperando nuevos residuos. Si uno persiste tras tres intentos, lo
+        omite para atender otros. El agarre y el depósito requieren comprobación visual.
+      </p>
     }
     <div class="actions">
       <button type="button" (click)="monitor.armRobot()" [disabled]="!monitor.canArmRobot()">
-        Activar funcionamiento
+        Iniciar clasificación continua
       </button>
       <button
         class="reset"
@@ -128,8 +141,8 @@
     <p class="note">
       Cancelar permite terminar el tramo ya enviado y bloquea los siguientes; no es una parada de
       emergencia. Resetear vuelve a HOME y abre la pinza: puede soltar el objeto. Prepara una
-      superficie de recepción y despeja el recorrido antes de pulsarlo. Después podrás activar
-      otra prueba sin reiniciar el backend.
+      superficie de recepción y despeja el recorrido antes de pulsarlo. Después podrás activar otra
+      prueba sin reiniciar el backend.
     </p>
     @if (robot?.error) {
       <p class="error" role="alert">{{ robot?.error }}</p>
@@ -137,5 +150,34 @@
     @if (monitor.controlError()) {
       <p class="error" role="alert">{{ monitor.controlError() }}</p>
     }
+    <div class="manual-controls" aria-labelledby="manual-controls-title">
+      <h3 id="manual-controls-title">Controles manuales</h3>
+      <p>
+        Detén el automático y espera que termine el movimiento. Para guardar, el brazo debe estar en
+        HOME; usa Resetear si está en otra posición.
+      </p>
+      <div class="actions">
+        <button
+          class="manual-close"
+          type="button"
+          (click)="monitor.closeGripper()"
+          [disabled]="!monitor.canUseManualControls()"
+        >
+          Cerrar pinza · 90°
+        </button>
+        <button
+          class="manual-park"
+          type="button"
+          (click)="monitor.parkRobot()"
+          [disabled]="!monitor.canParkRobot()"
+        >
+          Posición de guardado
+        </button>
+      </div>
+      <p class="note">
+        Estos controles no inician la clasificación. Después de guardar o cerrar manualmente,
+        Resetear devuelve el brazo a HOME y abre la pinza.
+      </p>
+    </div>
   </section>
 }

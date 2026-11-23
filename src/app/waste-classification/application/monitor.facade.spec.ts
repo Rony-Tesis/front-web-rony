@@ -198,4 +198,49 @@ describe('Shared monitor state', () => {
     expect(facade.snapshot()?.detection?.category).toBe('aluminum');
     expect(facade.canStartVirtualCycle()).toBe(false);
   });
+
+  it('blocks manual controls during automatic operation and sends only named actions', () => {
+    const { facade, stream, commands, commandRobot } = setup('api');
+    const seed = new SimulationEngine(Date.now()).snapshot(Date.now());
+    const robot = {
+      connected: true,
+      state: 'idle' as const,
+      stepLabel: 'Listo',
+      autoEnabled: false,
+      cycleActive: false,
+      holdingObject: null,
+      completedGrasps: 0,
+      reportedPosition: { x: 0, y: -162.94, z: 212.8 },
+      gripperAngle: 0,
+      telemetryAt: seed.updatedAt,
+      error: null,
+    };
+    const dto = {
+      ...seed,
+      sourceMode: 'live' as const,
+      motionMode: 'physical' as const,
+      robotState: robot,
+    };
+    stream.next({
+      snapshot: { ...dto, robotState: { ...robot, state: 'waiting', autoEnabled: true } },
+      error: null,
+    });
+    expect(facade.canUseManualControls()).toBe(false);
+    facade.closeGripper();
+    facade.parkRobot();
+    expect(commandRobot).not.toHaveBeenCalled();
+    stream.next({ snapshot: dto, error: null });
+    expect(facade.canUseManualControls()).toBe(true);
+    facade.closeGripper();
+    facade.parkRobot();
+    expect(commandRobot.mock.calls).toEqual([['close-gripper']]);
+    commands.complete();
+    facade.parkRobot();
+    expect(commandRobot.mock.calls.at(-1)).toEqual(['park']);
+    stream.next({ snapshot: { ...dto, robotState: { ...robot, state: 'parked' } }, error: null });
+    expect(facade.canParkRobot()).toBe(false);
+    expect(facade.canArmRobot()).toBe(false);
+    stream.next({ snapshot: dto, error: 'Sin conexión' });
+    expect(facade.canUseManualControls()).toBe(false);
+  });
 });

@@ -85,8 +85,17 @@ function operation(value: unknown): ClassificationOperation {
     residue: text(source['residue']),
     category: choice(source['category'], ['cardboard', 'plastic', 'aluminum']),
     confidence: number(source['confidence'], 0, 1),
-    result: choice(source['result'], ['success', 'failure']),
+    result: choice(source['result'], ['success', 'failure', 'unverified']),
     durationMs: number(source['durationMs'], 0, 86400000),
+    ...(source['destination'] === undefined
+      ? {}
+      : { destination: source['destination'] === null ? null : text(source['destination']) }),
+    ...(source['depositConfirmed'] === undefined
+      ? {}
+      : {
+          depositConfirmed:
+            source['depositConfirmed'] === null ? null : boolean(source['depositConfirmed']),
+        }),
   };
 }
 
@@ -104,8 +113,11 @@ function robotState(value: unknown) {
       'countdown',
       'moving',
       'holding',
+      'finished',
       'cancelled',
       'fault',
+      'manual',
+      'parked',
       'resetting',
     ] as const),
     stepLabel: text(source['stepLabel'], 200),
@@ -113,6 +125,12 @@ function robotState(value: unknown) {
     cycleActive: boolean(source['cycleActive']),
     holdingObject: source['holdingObject'] === null ? null : boolean(source['holdingObject']),
     completedGrasps: integer(source['completedGrasps']),
+    ...(source['completedCycles'] === undefined
+      ? {}
+      : { completedCycles: integer(source['completedCycles']) }),
+    ...(source['provisionalDestinations'] === undefined
+      ? {}
+      : { provisionalDestinations: boolean(source['provisionalDestinations']) }),
     reportedPosition: pose ? { ...position(pose), z: number(pose['z'], -1e6, 1e6) } : null,
     gripperAngle: source['gripperAngle'] === null ? null : number(source['gripperAngle'], 0, 180),
     telemetryAt: source['telemetryAt'] === null ? null : date(source['telemetryAt']),
@@ -164,13 +182,20 @@ export function mapMonitorSnapshot(value: unknown): MonitorSnapshot {
   const successful = integer(summary['successful']);
   const failed = integer(summary['failed']);
   const processedToday = integer(summary['processedToday']);
-  if (total !== successful + failed || processedToday > total || operations.length > total)
+  const unverified = summary['unverified'] === undefined ? 0 : integer(summary['unverified']);
+  if (
+    total !== successful + failed + unverified ||
+    processedToday > total ||
+    operations.length > total
+  )
     throw new Error('Inconsistent totals.');
   const stageIndex = integer(process['stageIndex'], PROCESS_STAGES.length - 1);
   const completed = boolean(process['completed']);
   const progressPercent = number(process['progressPercent'], 0, 100);
   const lastResult =
-    process['lastResult'] === null ? null : choice(process['lastResult'], ['success', 'failure']);
+    process['lastResult'] === null
+      ? null
+      : choice(process['lastResult'], ['success', 'failure', 'unverified']);
   const gripperClosed = boolean(process['gripperClosed']);
   if (completed && (progressPercent !== 100 || lastResult === null || gripperClosed))
     throw new Error('Inconsistent completed cycle.');
@@ -213,6 +238,7 @@ export function mapMonitorSnapshot(value: unknown): MonitorSnapshot {
       failed,
       processedToday,
       averageDurationMs: number(summary['averageDurationMs'], 0, 86400000),
+      ...(summary['unverified'] === undefined ? {} : { unverified }),
     },
     operations,
     equipment,

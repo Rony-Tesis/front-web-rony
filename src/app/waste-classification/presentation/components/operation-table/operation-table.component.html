@@ -26,7 +26,7 @@
                 | date: (compact() ? 'HH:mm:ss' : 'dd/MM/yyyy HH:mm:ss') : '-0500'
             }}
           </td>
-          <td class="residue">
+          <td class="residue" [attr.title]="operation.destination ?? null">
             <span>{{ operation.residue }}</span>
             @if (compact()) {
               <span class="tag" [attr.data-category]="operation.category">{{
@@ -44,7 +44,11 @@
           }
           <td>
             <span class="result" [class.fail]="operation.result === 'failure'">{{
-              operation.result === 'success' ? '● Correcta' : '× Fallida'
+              operation.result === 'success'
+                ? '● Correcta'
+                : operation.result === 'unverified'
+                  ? '◌ Verificar depósito'
+                  : '× Recorrido fallido'
             }}</span>
           </td>
           <td>{{ operation.durationMs / 1000 | number: '1.1-1' }} s</td>
@@ -67,11 +71,7 @@
         Anterior
       </button>
       <span>Página {{ currentPage() }} de {{ totalPages() }}</span>
-      <button
-        type="button"
-        (click)="nextPage()"
-        [disabled]="currentPage() === totalPages()"
-      >
+      <button type="button" (click)="nextPage()" [disabled]="currentPage() === totalPages()">
         Siguiente
       </button>
     </div>

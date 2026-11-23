@@ -5,6 +5,7 @@ import { RUNTIME_CONFIG, apiEndpoint } from '../../core/config/runtime-config';
 import { MonitorUpdate } from '../application/monitor-repository';
 import { SimulationEngine } from '../domain/simulation-engine';
 import { HttpMonitorRepository } from './http-monitor.repository';
+import { ApiSession } from '../../core/http/api-session.service';
 
 describe('HTTP monitoring boundary', () => {
   let http: HttpTestingController;
@@ -49,10 +50,10 @@ describe('HTTP monitoring boundary', () => {
     subscription.unsubscribe();
   });
 
-  it('stops polling when authentication is required', () => {
+  it('stops unauthenticated polling and resumes after signing in', () => {
     const updates: MonitorUpdate[] = [];
     let completed = false;
-    TestBed.inject(HttpMonitorRepository)
+    const subscription = TestBed.inject(HttpMonitorRepository)
       .watch()
       .subscribe({
         next: (value) => updates.push(value),
@@ -66,9 +67,18 @@ describe('HTTP monitoring boundary', () => {
       .flush({ secret: 'must not appear' }, { status: 401, statusText: 'Unauthorized' });
     expect(updates[0]?.error).toContain('no está autenticada');
     expect(updates[0]?.error).not.toContain('secret');
-    expect(completed).toBe(true);
+    expect(completed).toBe(false);
     vi.advanceTimersByTime(30000);
     http.expectNone(endpoint);
+    TestBed.inject(ApiSession).signIn('012345678901234567890123');
+    const login = http.expectOne('/api/v1/session');
+    expect(login.request.withCredentials).toBe(true);
+    expect(login.request.headers.get('X-Rony-Control')).toBe('1');
+    login.flush({ authenticated: true });
+    vi.advanceTimersByTime(0);
+    http.expectOne(endpoint).flush(new SimulationEngine(Date.now()).snapshot(Date.now()));
+    expect(updates.at(-1)?.error).toBeNull();
+    subscription.unsubscribe();
   });
 
   it('backs off after malformed responses and recovers with valid data', () => {

@@ -3,6 +3,27 @@
 <div class="shell">
   <app-topbar />
   <main id="main-content" tabindex="-1">
+    @if (session.required()) {
+      <form class="message" (ngSubmit)="signIn()" aria-label="Acceso al sistema">
+        <label for="access-key">Clave de acceso</label>
+        <input
+          id="access-key"
+          name="accessKey"
+          type="password"
+          autocomplete="current-password"
+          minlength="24"
+          maxlength="256"
+          required
+          [(ngModel)]="accessKey"
+        />
+        <button type="submit" [disabled]="session.pending()">
+          {{ session.pending() ? 'Conectando…' : 'Entrar' }}
+        </button>
+        @if (session.error(); as error) {
+          <p role="alert">{{ error }}</p>
+        }
+      </form>
+    }
     @if (monitor.loading()) {
       <p class="message" role="status">Cargando información del sistema…</p>
     }

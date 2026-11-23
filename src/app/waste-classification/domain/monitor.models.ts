@@ -1,5 +1,5 @@
 export type WasteCategory = 'cardboard' | 'plastic' | 'aluminum';
-export type ClassificationResult = 'success' | 'failure';
+export type ClassificationResult = 'success' | 'failure' | 'unverified';
 export type EquipmentStatus = 'online' | 'offline' | 'unknown';
 export type EquipmentId = 'camera' | 'yolo' | 'robot' | 'gripper' | 'planner';
 
@@ -28,6 +28,8 @@ export interface ClassificationOperation {
   readonly confidence: number;
   readonly result: ClassificationResult;
   readonly durationMs: number;
+  readonly destination?: string | null;
+  readonly depositConfirmed?: boolean | null;
 }
 
 export interface ClassificationSummary {
@@ -36,6 +38,7 @@ export interface ClassificationSummary {
   readonly successful: number;
   readonly failed: number;
   readonly averageDurationMs: number;
+  readonly unverified?: number;
 }
 
 export interface ProcessState {
@@ -65,7 +68,7 @@ export interface SimulationState {
 
 export type SimulationAction = 'pause' | 'resume' | 'cycle';
 
-export type RobotAction = 'arm' | 'cancel' | 'reset';
+export type RobotAction = 'arm' | 'cancel' | 'reset' | 'close-gripper' | 'park';
 export interface RobotState {
   readonly connected: boolean;
   readonly state:
@@ -76,14 +79,19 @@ export interface RobotState {
     | 'countdown'
     | 'moving'
     | 'holding'
+    | 'finished'
     | 'cancelled'
     | 'fault'
+    | 'manual'
+    | 'parked'
     | 'resetting';
   readonly stepLabel: string;
   readonly autoEnabled: boolean;
   readonly cycleActive: boolean;
   readonly holdingObject: boolean | null;
   readonly completedGrasps: number;
+  readonly completedCycles?: number;
+  readonly provisionalDestinations?: boolean;
   readonly reportedPosition: (Position & { readonly z: number }) | null;
   readonly gripperAngle: number | null;
   readonly telemetryAt: string | null;
@@ -92,11 +100,17 @@ export interface RobotState {
 
 export const PHYSICAL_STAGES = [
   { name: 'Preparación', description: 'Posicionar en HOME y abrir la pinza vacía.' },
-  { name: 'Detección estable', description: 'Plástico ≥0.80, 50 frames y cuenta regresiva.' },
+  {
+    name: 'Detección estable',
+    description: 'Residuo ≥0.80 y 8 frames nuevos; sin cuenta regresiva.',
+  },
   { name: 'Aproximación', description: 'Posicionar a Z=120 mm.' },
-  { name: 'Agarre', description: 'Descender a Z=90 mm y cerrar la pinza a 82°.' },
-  { name: 'Levantamiento', description: 'Elevar el objeto a Z=120 mm.' },
-  { name: 'Regreso a HOME', description: 'Volver a HOME manteniendo la pinza cerrada.' },
+  { name: 'Agarre', description: 'Descender a Z=90 mm y cerrar la pinza a 80° y estabilizar.' },
+  { name: 'Traslado', description: 'Elevar, volver a HOME y transportar al destino.' },
+  {
+    name: 'Descarga y regreso',
+    description: 'Abrir en destino y volver a HOME para el siguiente objeto.',
+  },
 ] as const;
 
 export interface MonitorSnapshot {
@@ -175,6 +189,8 @@ export function stageStatus(process: ProcessState, index: number): 'done' | 'cur
 
 export function processLabel(process: ProcessState, paused: boolean): string {
   if (paused) return 'Simulación pausada';
+  if (process.completed && process.lastResult === 'unverified')
+    return 'Recorrido terminado · verificar depósito';
   if (process.completed)
     return process.lastResult === 'failure' ? 'Revisión requerida' : 'Ciclo completado';
   return PROCESS_STAGES[process.stageIndex]?.state ?? 'En espera';

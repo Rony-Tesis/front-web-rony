@@ -34,6 +34,24 @@ main {
   display: block;
   margin-top: 6px;
 }
+form.message {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+form.message input,
+form.message button {
+  min-height: 42px;
+  border: 1px solid var(--navy);
+  border-radius: 6px;
+  padding: 8px 12px;
+  font: inherit;
+}
+form.message button {
+  color: #fff;
+  background: var(--navy);
+}
 @media (max-width: 780px) {
   main {
     padding: 18px 14px 30px;
