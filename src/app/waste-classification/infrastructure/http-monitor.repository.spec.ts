@@ -128,6 +128,32 @@ describe('HTTP monitoring boundary', () => {
     expect(next).toHaveBeenCalledWith(dto);
   });
 
+  it('uses bounded polling and JPEG metadata without opening event streams', () => {
+    const events = vi.fn();
+    vi.stubGlobal('EventSource', events);
+    const updates: MonitorUpdate[] = [];
+    const sub = TestBed.inject(HttpMonitorRepository)
+      .watch()
+      .subscribe((value) => updates.push(value));
+    const dto = {
+      ...new SimulationEngine(Date.now()).snapshot(Date.now()),
+      telemetryTransport: 'polling',
+      cameraTransport: 'jpeg',
+    };
+    try {
+      vi.advanceTimersByTime(0);
+      http.expectOne(endpoint).flush(dto);
+      vi.advanceTimersByTime(2000);
+      http.expectOne(endpoint).flush(dto);
+      expect(events).not.toHaveBeenCalled();
+      expect(updates.at(-1)?.snapshot?.telemetryTransport).toBe('polling');
+      expect(updates.at(-1)?.snapshot?.cameraTransport).toBe('jpeg');
+    } finally {
+      sub.unsubscribe();
+      vi.unstubAllGlobals();
+    }
+  });
+
   it('switches to continuous validated SSE without polling and closes on destruction', () => {
     class FakeEvents {
       static CLOSED = 2;

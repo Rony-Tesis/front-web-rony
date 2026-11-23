@@ -420,7 +420,8 @@
             "type": "string"
           },
           "telemetryTransport": {
-            "type": "string"
+            "type": "string",
+            "enum": ["sse", "polling"]
           },
           "robotState": {
             "$ref": "#/components/schemas/RobotState"

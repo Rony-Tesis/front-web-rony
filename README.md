@@ -10,6 +10,8 @@ El archivo `netlify.toml` configura la compilación con Node 24, `npm run build`
 
 El front publicado es `https://rony-brazo.netlify.app` y su API está en `https://rony-api.onrender.com`. Netlify envía `/api/*` hacia `/api/*` de Render antes de aplicar la regla SPA. El navegador conserva el mismo origen para peticiones, cámara y cookie de sesión. La dirección del backend es pública; las claves permanecen en la configuración privada de Render y del brazo. No añadir claves del brazo, de la web ni de la base de datos a las variables del front o al código Angular.
 
+El perfil Render usa consultas periódicas y JPEG individuales (`telemetryTransport: polling`, `cameraTransport: jpeg`) para que cada petición termine dentro del proxy de Netlify. El ciclo y la inferencia siguen dentro del JetMax. Los despliegues con conexión directa conservan SSE/MJPEG. El historial se resume con una sola consulta agregada, se refresca cada cinco segundos y se invalida al recibir resultados nuevos del brazo.
+
 ## Probar la aplicación integrada
 
 Desde `../back-temp-rony`:

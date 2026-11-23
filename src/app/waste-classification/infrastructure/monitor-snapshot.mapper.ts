@@ -214,7 +214,7 @@ export function mapMonitorSnapshot(value: unknown): MonitorSnapshot {
       : { simulationState: simulationState(source['simulationState']) }),
     ...(source['telemetryTransport'] === undefined
       ? {}
-      : { telemetryTransport: choice(source['telemetryTransport'], ['sse'] as const) }),
+      : { telemetryTransport: choice(source['telemetryTransport'], ['sse', 'polling'] as const) }),
     ...(source['robotState'] === undefined ? {} : { robotState: robotState(source['robotState']) }),
     experimentalMode: choice(source['experimentalMode'], ['optimized', 'baseline']),
     updatedAt: date(source['updatedAt']),

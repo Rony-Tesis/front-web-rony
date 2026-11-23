@@ -117,7 +117,7 @@ export interface MonitorSnapshot {
   readonly simulationState?: SimulationState;
   readonly sourceMode?: 'simulation' | 'live';
   readonly motionMode?: 'simulation' | 'physical';
-  readonly telemetryTransport?: 'sse';
+  readonly telemetryTransport?: 'sse' | 'polling';
   readonly robotState?: RobotState | null;
   readonly cameraTransport?: 'jpeg' | 'mjpeg';
   readonly experimentalMode: 'optimized' | 'baseline';
