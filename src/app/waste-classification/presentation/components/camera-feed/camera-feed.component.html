@@ -13,6 +13,7 @@
           : 'Última imagen recibida de la cámara de clasificación'
       "
       (error)="imageFailed()"
+      (load)="imageLoaded()"
     />
     <div class="shade"></div>
     @if (simulation()) {
@@ -26,11 +27,15 @@
     <div class="active-object">Analizando: {{ detection.shortName }}</div>
   }
   <div class="corner left"><span class="dot"></span>{{ cameraLabel() }}</div>
-  <div class="corner right">{{ snapshot().updatedAt | date: 'HH:mm:ss' : '-0500' }}</div>
+  <div class="corner right">
+    {{ videoAt() ?? snapshot().updatedAt | date: 'HH:mm:ss' : '-0500' }}
+  </div>
   @if (!compact()) {
     <div class="footer">
       <span>CÁMARA 01 · CLASIFICACIÓN</span
-      ><span>{{ snapshot().framesPerSecond | number: '1.1-1' }} FPS</span>
+      ><span
+        >{{ (videoAt() ? videoFps() : snapshot().framesPerSecond) | number: '1.1-1' }} FPS</span
+      >
     </div>
     <div
       class="progress"
