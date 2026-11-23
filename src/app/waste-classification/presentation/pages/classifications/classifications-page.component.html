@@ -4,6 +4,9 @@
     <p>Historial de operaciones y resultados de clasificación.</p>
   </div>
   @if (monitor.snapshot(); as snapshot) {
+    @if (snapshot.sourceMode === 'simulation') {
+      <p>Modo de demostración. Los resultados de este historial son simulados.</p>
+    }
     <div class="metrics">
       <app-metric-card
         label="Total de operaciones"

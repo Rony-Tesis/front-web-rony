@@ -685,6 +685,23 @@
             ],
             "title": "Gripperangle"
           },
+          "reportedJoints": {
+            "description": "Ángulos en grados reportados por el controlador ROS.",
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "joint1": { "type": "number" },
+                  "joint2": { "type": "number" },
+                  "joint3": { "type": "number" }
+                },
+                "required": ["joint1", "joint2", "joint3"]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "telemetryAt": {
             "anyOf": [
               {
